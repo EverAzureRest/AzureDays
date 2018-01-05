@@ -1,0 +1,49 @@
+{
+"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+"contentVersion": "1.0.0.0",
+"parameters": {
+    "adminUserName": {
+        "value": ""
+    },
+    "sshRSAPublicKey": {
+        "reference": {
+            "keyVault": {
+                "id": "/subscriptions/<subscriptionGUID>/resourceGroups/<keyvaultresourcegroup>/providers/Microsoft.KeyVault/vaults/<keyvaultname>"
+            },
+            "secretName": "<rsa-secret-name>"
+        }
+    },
+    "vmNamePrefix": {
+        "value": ""
+    },
+    "numberOfInstances": {
+        "value": 2
+    },
+    "virtualNetworkName": {
+        "value": ""
+    },
+    "virtualNetworkResourceGroup": {
+        "value": ""
+    },
+    "fileUri": {
+        "value": ""
+    },
+    "commandToExecute": {
+        "value": ""
+    },
+    "subnetName": {
+        "value": ""
+    },
+    "workspaceId": {
+        "value": ""
+    },
+    "workspaceKey": {
+        "reference": {
+            "keyVault": {
+                "id": "/subscriptions/<subscriptionid>/resourceGroups/<keyvaultresourcegroup>/providers/Microsoft.KeyVault/vaults/<keyvaultname>"
+            },
+            "secretName": "<oms key secret name>"
+        }
+    }
+  }
+}
