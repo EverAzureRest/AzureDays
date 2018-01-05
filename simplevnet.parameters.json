@@ -3,7 +3,7 @@
 "contentVersion": "1.0.0.0",
 "parameters": {
     "vnetName": {
-        "value": "DVQVNET"
+        "value": "NAME HERE"
     },
     "vnetAddressPrefix": {
         "value": "10.2.0.0/16"
