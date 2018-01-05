@@ -81,7 +81,7 @@
     },
     "_artifactsLocation": {
       "type": "string",
-      "defaultValue": "https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/oms-all-deploy",
+      "defaultValue": "https://raw.githubusercontent.com/lorax79/AzureDays/master/OMS",
       "metadata": {
         "description": "The base URI where artifacts required by this template are located"
       }
@@ -114,6 +114,27 @@
     }
   },
   "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2016-02-01",
+      "name": "omsRecoveryServices",
+      "dependsOn": [],
+      "properties": {
+        "mode": "Incremental",
+        "templateLink": {
+          "uri": "[variables('nestedTemplates').omsRecoveryServices]",
+          "contentVersion": "1.0.0.0"
+        },
+        "parameters": {
+          "omsRecoveryVaultName": {
+            "value": "[parameters('omsRecoveryVaultName')]"
+          },
+          "omsRecoveryVaultRegion": {
+            "value": "[parameters('omsRecoveryVaultRegion')]"
+          }
+        }
+      }
+    },
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2016-02-01",
