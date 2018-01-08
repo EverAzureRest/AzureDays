@@ -1,49 +1,52 @@
 {
 "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
 "contentVersion": "1.0.0.0",
-"parameters": {
+  "parameters": {
     "adminUserName": {
-        "value": ""
+      "value": ""
     },
     "sshRSAPublicKey": {
-        "reference": {
-            "keyVault": {
-                "id": "/subscriptions/<subscriptionGUID>/resourceGroups/<keyvaultresourcegroup>/providers/Microsoft.KeyVault/vaults/<keyvaultname>"
-            },
-            "secretName": "<rsa-secret-name>"
-        }
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/<subscriptionGUID>/resourceGroups/<keyvaultresourcegroup>/providers/Microsoft.KeyVault/vaults/<keyvaultname>"
+        },
+        "secretName": "<rsa-secret-name>"
+      }
     },
     "vmNamePrefix": {
-        "value": ""
+      "value": ""
     },
     "numberOfInstances": {
-        "value": 2
+      "value": 2
+    },
+    "availabilitySetName": {
+      "value": ""
     },
     "virtualNetworkName": {
-        "value": ""
+      "value": ""
     },
     "virtualNetworkResourceGroup": {
-        "value": ""
+      "value": ""
     },
     "fileUri": {
-        "value": ""
+      "value": ""
     },
     "commandToExecute": {
-        "value": ""
+      "value": ""
     },
     "subnetName": {
-        "value": ""
+      "value": ""
     },
     "workspaceId": {
-        "value": ""
+      "value": ""
     },
     "workspaceKey": {
-        "reference": {
-            "keyVault": {
-                "id": "/subscriptions/<subscriptionid>/resourceGroups/<keyvaultresourcegroup>/providers/Microsoft.KeyVault/vaults/<keyvaultname>"
-            },
-            "secretName": "<oms key secret name>"
-        }
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/<subscriptionid>/resourceGroups/<keyvaultresourcegroup>/providers/Microsoft.KeyVault/vaults/<keyvaultname>"
+        },
+        "secretName": "<oms key secret name>"
+      }
     }
   }
 }

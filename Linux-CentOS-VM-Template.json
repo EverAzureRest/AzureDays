@@ -10,17 +10,17 @@
       }
     },
     "sshRSAPath": {
-    "type": "string",
-    "defaultValue": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]",
-    "metadata": {
+      "type": "string",
+      "defaultValue": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]",
+      "metadata": {
         "description": "Path to the RSA public key for SSH"
-        }
+      }
     },
     "sshRSAPublicKey": {
       "type": "string",
       "metadata": {
         "description": "PEM-encoded public key"
-        }
+      }
     },
     "CENTOSVersion": {
       "type": "string",
@@ -52,6 +52,12 @@
         "description": "Number of VM instances to be created behind during resource loop"
       }
     },
+    "availabilitySetName": {
+      "type": "string",
+      "metadata": {
+        "description": "name for Availability Set to put VMs into"
+      }
+    },
     "vmNamePrefix": {
       "type": "string",
       "metadata": {
@@ -72,10 +78,10 @@
       "defaultValue": "DefaultNSG"
     },
     "fileUri": {
-        "type": "string",
-        "metadata": {
-            "description": "Online path to the custom script to be executed by the custom script extension"
-        }
+      "type": "string",
+      "metadata": {
+        "description": "Online path to the custom script to be executed by the custom script extension"
+      }
     },
     "commandToExecute": {
       "type": "string",
@@ -128,6 +134,19 @@
       }
     },
     {
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[parameters('availabilitySetName')]",
+      "apiVersion": "2016-04-30-preview",
+      "sku": {
+        "name": "Aligned"
+      },
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "platformFaultDomainCount": 3,
+        "platformUpdateDomainCount": 5
+      }
+    },
+    {
       "apiVersion": "2015-06-15",
       "type": "Microsoft.Network/networkInterfaces",
       "name": "[concat(parameters('vmNamePrefix'), copyindex(), variables('networkInterfaceNamePrefix'))]",
@@ -167,110 +186,114 @@
         "displayName": "VirtualMachines"
       },
       "dependsOn": [
-        "nicLoop"
+        "nicLoop",
+        "[concat('Microsoft.Compute/availabilitySets/', parameters('availabilitySetName'))]"
       ],
       "properties": {
-        "hardwareProfile": {
-          "vmSize": "[parameters('vmSize')]"
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('availabilitySetName'))]"
         },
-        "OSProfile": {
-          "computerName": "[concat(parameters('vmNamePrefix'), copyIndex())]",
-          "adminUsername": "[parameters('adminUsername')]",
-          "linuxConfiguration": {
-                    "ssh": {
-            "publicKeys": [
+          "hardwareProfile": {
+            "vmSize": "[parameters('vmSize')]"
+          },
+          "OSProfile": {
+            "computerName": "[concat(parameters('vmNamePrefix'), copyIndex())]",
+            "adminUsername": "[parameters('adminUsername')]",
+            "linuxConfiguration": {
+              "ssh": {
+                "publicKeys": [
+                  {
+                    "path": "[parameters('sshRSAPath')]",
+                    "keyData": "[parameters('sshRSAPublicKey')]"
+                  }
+                ]
+              }
+            }
+          },
+          "storageProfile": {
+            "imageReference": {
+              "publisher": "[variables('imagePublisher')]",
+              "offer": "[variables('imageOffer')]",
+              "sku": "[parameters('CENTOSVersion')]",
+              "version": "latest"
+            },
+            "osDisk": {
+              "name": "[concat(parameters('vmNamePrefix'), copyIndex(), 'osdisk')]",
+              "caching": "ReadWrite",
+              "createOption": "FromImage"
+            },
+            "dataDisks": [
               {
-                "path": "[parameters('sshRSAPath')]",
-                "keyData": "[parameters('sshRSAPublicKey')]"
+                "name": "[concat(parameters('vmNamePrefix'), copyIndex(), 'datadisk')]",
+                "lun": 0,
+                "diskSizeGB": 100,
+                "createOption": "Empty",
+                "caching": "ReadWrite"
               }
             ]
-          }
-        }
-        },
-        "storageProfile": {
-          "imageReference": {
-            "publisher": "[variables('imagePublisher')]",
-            "offer": "[variables('imageOffer')]",
-            "sku": "[parameters('CENTOSVersion')]",
-            "version": "latest"
           },
-          "osDisk": {
-            "name": "[concat(parameters('vmNamePrefix'), copyIndex(), 'osdisk')]",
-            "caching": "ReadWrite",
-            "createOption": "FromImage"
+          "networkProfile": {
+            "networkInterfaces": [
+              {
+                "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vmNamePrefix'), copyindex(), variables('networkInterfaceNamePrefix')))]"
+              }
+            ]
           },
-          "dataDisks": [
-            {
-              "name": "[concat(parameters('vmNamePrefix'), copyIndex(), 'datadisk')]",
-              "lun": 0,
-              "diskSizeGB": 100,
-              "createOption": "Empty",
-              "caching": "ReadWrite"
+          "diagnosticsProfile": {
+            "bootDiagnostics": {
+              "enabled": false
             }
-          ]
-        },
-        "networkProfile": {
-          "networkInterfaces": [
-            {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vmNamePrefix'), copyindex(), variables('networkInterfaceNamePrefix')))]"
-            }
-          ]
-        },
-        "diagnosticsProfile": {
-          "bootDiagnostics": {
-            "enabled": false
           }
-        }
-      },
-      "resources": [
-        {
-          "name": "CustomScriptForLinux",
-          "type": "extensions",
-          "location": "[resourceGroup().location]",
-          "apiVersion": "2016-04-30-preview",
-          "dependsOn": [
-            "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('vmNamePrefix'), copyindex()))]"
-          ],
-          "properties": {
-            "publisher": "Microsoft.OSTCExtensions",
-            "type": "CustomScriptForLinux",
-            "typeHandlerVersion": "1.4",
-            "autoUpgradeMinorVersion": true,
-            "settings": {
-              "fileUris": [
-                "[parameters('fileUri')]"
-              ]
+        },
+        "resources": [
+          {
+            "name": "CustomScriptForLinux",
+            "type": "extensions",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2016-04-30-preview",
+            "dependsOn": [
+              "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('vmNamePrefix'), copyindex()))]"
+            ],
+            "properties": {
+              "publisher": "Microsoft.OSTCExtensions",
+              "type": "CustomScriptForLinux",
+              "typeHandlerVersion": "1.4",
+              "autoUpgradeMinorVersion": true,
+              "settings": {
+                "fileUris": [
+                  "[parameters('fileUri')]"
+                ]
+              },
+              "protectedSettings": {
+                "commandToExecute": "[parameters('commandToExecute')]"
+              }
+            }
+          },
+          {
+            "name": "Microsoft.EnterpriseCloud.Monitoring",
+            "type": "extensions",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2016-04-30-preview",
+            "dependsOn": [
+              "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('vmNamePrefix'), copyindex()))]"
+            ],
+            "tags": {
+              "displayName": "MMA"
             },
-            "protectedSettings": {
-              "commandToExecute": "[parameters('commandToExecute')]"
+            "properties": {
+              "publisher": "Microsoft.EnterpriseCloud.Monitoring",
+              "type": "OmsAgentForLinux",
+              "typeHandlerVersion": "1.0",
+              "autoUpgradeMinorVersion": true,
+              "settings": {
+                "workspaceId": "[parameters('workspaceId')]"
+              },
+              "protectedSettings": {
+                "workspaceKey": "[parameters('workspaceKey')]"
+              }
             }
           }
-        },
-        {
-          "name": "Microsoft.EnterpriseCloud.Monitoring",
-          "type": "extensions",
-          "location": "[resourceGroup().location]",
-          "apiVersion": "2016-04-30-preview",
-          "dependsOn": [
-            "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('vmNamePrefix'), copyindex()))]"
-          ],
-          "tags": {
-            "displayName": "MMA"
-          },
-          "properties": {
-            "publisher": "Microsoft.EnterpriseCloud.Monitoring",
-            "type": "OmsAgentForLinux",
-            "typeHandlerVersion": "1.0",
-            "autoUpgradeMinorVersion": true,
-            "settings": {
-              "workspaceId": "[parameters('workspaceId')]"
-            },
-            "protectedSettings": {
-              "workspaceKey": "[parameters('workspaceKey')]"
-            }
-          }
-        }
-      ]
-    }
+        ]
+      }
   ]
 }
