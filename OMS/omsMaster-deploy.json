@@ -10,7 +10,7 @@
     },
     "omsRecoveryVaultRegion": {
       "type": "string",
-      "defaultValue": "West Central US",
+      "defaultValue": "East US",
       "allowedValues": [
         "West US",
         "East US",
@@ -43,7 +43,7 @@
     },
     "omsWorkspaceRegion": {
       "type": "string",
-      "defaultValue": "West Central US",
+      "defaultValue": "East US",
       "allowedValues": [
         "East US",
         "West Central US"
@@ -61,7 +61,7 @@
     },
     "omsAutomationRegion": {
       "type": "string",
-      "defaultValue": "West Central US",
+      "defaultValue": "East US 2",
       "allowedValues": [
         "Japan East",
         "East US 2",
