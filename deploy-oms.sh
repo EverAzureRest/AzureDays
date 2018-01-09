@@ -4,15 +4,18 @@
 #Azure CLI v2.0 required for this script to work https://docs.microsoft.com/en-us/cli/azure/install-azure-cli
 
 #Resource Group Name for OMS and Keyvault
-SUPPORTRG=
+SUPPORTRG=""
 #Name of the deployment subscription
-SUBSCRIPTIONNAME=
+SUBSCRIPTIONNAME=""
 #Deployment Azure Region
-LOCATION=
+LOCATION=""
 #OMS Template file locations
 OMSTEMPLATE=./OMS/omsMaster-deploy.json
 OMSPARAMSFILE=./OMS/omsMaster.parameters.json
 
+#Set the target subscription
+az account set --subscription $SUBSCRIPTIONNAME
+echo "Account set to $SUBSCRIPTIONNAME"
 
 #Create the Resource Group for the Keyvault and OMS
 echo "Building Resource Group for OMS and Keyvault..."
