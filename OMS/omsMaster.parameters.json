@@ -3,19 +3,19 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "omsRecoveryVaultName": {
-      "value": "mmnikeazdayvault001"
+      "value": ""
     },
     "omsRecoveryVaultRegion": {
       "value": "East US"
     },
     "omsWorkspaceName": {
-      "value": "mmnikeazdayomsdemo001"
+      "value": ""
     },
     "omsWorkspaceRegion": {
       "value": "East US"
     },
     "omsAutomationAccountName": {
-      "value": "mm-azday-aa-01"
+      "value": ""
     },
     "omsAutomationRegion": {
       "value": "East US 2"
@@ -24,7 +24,7 @@
       "value": "password-change-me"
     },
     "azureAdmin": {
-      "value": "mamorga@microsoft.com"
+      "value": ""
     },
     "_artifactsLocation": {
       "value": "https://raw.githubusercontent.com/lorax79/AzureDays/master/OMS"

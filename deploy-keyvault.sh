@@ -8,7 +8,7 @@ SUPPORTRG=""
 #Name of the deployment subscription
 SUBSCRIPTIONNAME=""
 #Deployment Azure Region
-LOCATION=""
+LOCATION="East US"
 #KeyVault Name
 KVNAME=""
 #OMS Key from the OMS Deployment Script
@@ -30,3 +30,7 @@ az keyvault secret set -n omssecret --vault-name $KVNAME --value $OMSKEY
 #Create a secret for your SSH public key that will be used in VM Deployment
 
 az keyvault secret set -n sshsecret --vault-name $KVNAME --file $SSHPUBKEYFILE
+
+KEYVAULTID=$(az keyvault show -n $KVNAME -g $SUPPORTRG --query "id" | tr -d '"')
+
+echo "Your Keyvault ID is: $KEYVAULTID - please copy this value to use in the VM Deployment Parameters file"
