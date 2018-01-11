@@ -8,10 +8,12 @@ SUPPORTRG=""
 #Name of the deployment subscription
 SUBSCRIPTIONNAME=""
 #Deployment Azure Region
-LOCATION=""
+LOCATION="East US"
 #OMS Template file locations
 OMSTEMPLATE=./OMS/omsMaster-deploy.json
 OMSPARAMSFILE=./OMS/omsMaster.parameters.json
+#Enter the name of the workspace used in the parameters file above
+OMSWORKSPACENAME=""
 
 #Set the target subscription
 az account set --subscription $SUBSCRIPTIONNAME
@@ -25,4 +27,6 @@ az group create --name $SUPPORTRG --location $LOCATION
 echo "Deploying OMS workspace"
 az group deployment create -n OMSdeployment -g $SUPPORTRG --template-file $OMSTEMPLATE --parameters @$OMSPARAMSFILE
 
+WORKSPACEID=$(az resource show -n $OMSWORKSPACENAME -g $SUPPORTRG --resource-type Microsoft.OperationalInsights/workspaces --query "properties.customerId" | tr -d '"')
 
+echo "Deployment Complete - your OMS Workspace ID is: $WORKSPACEID - please note this value"

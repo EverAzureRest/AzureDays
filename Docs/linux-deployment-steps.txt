@@ -1,0 +1,65 @@
+prereqs:
+    terminal emulator running BASH or ZSH
+    git commandline
+    code editor (recommend vscode)
+    notepad editor
+    Azure CLI v2
+    Azure Subscription with owner role
+
+Process Notes...
+
+1. clone Repo -- git clone https://github.com/lorax79/AzureDays/master
+
+2. open folder in code editor
+
+3. open a notepad to note important information
+
+4. open ./OMS/omsMaster.parameters.json in code editor
+    specifiy empty parameter values
+    MAKE NOTE OF OMS WORKSPACE NAME in open notepad
+
+ - Open terminal emulator and:
+    Run 'az login' and run through steps for device login
+    Run 'az account show' - Make note in Notepad of your Subscription Name.
+
+5. open deploy-oms.sh script file
+    edit empty variables
+    save changes to script
+
+6. open a terminal emulator and change the working directory to the directory you cloned the repository into
+    Run 'sh deploy-oms.sh'
+    Script will output the OMS workspace ID - Note this value in your open notepad editor
+
+7. Go to https://portal.azure.com and log in. 
+    show steps to get to workspace key
+    note workspace key value in notepad. 
+
+8. open deploy-keyvault.sh in code editor
+    edit empty variables
+    ensure workspace key matches value grabbed from portal in step 7
+    ensure that the variable SSHPUBKEYFILE contains the path to your SSH public key file.
+    save the changes to the script
+
+9. run 'sh deploy-keyvault.sh' in terminal emulator
+    once the script is complete, it will output your Keyvault ID.  Copy and paste this value into your notepad.
+    run 'az keyvault secret list --vault-name <keyvault name>' to see a list of the secrets created by the script.
+
+
+10. open deploy-linuxVMs.sh in the code editor. 
+    edit blank variables
+    
+
+11. open Linux-CentOS-VM-Template.parameters.json in your code editor
+    edit the empty parameters
+    for the parameters sshRSAPublicKey and workspaceKey, copy the Keyvault ID from step 9 into both Id values. 
+    Note that the secret names are hard-coded in this instance and were used in the keyvault deployment script.
+    Note the value specified for 'adminUsername' in your notepad editor - you will need this to connect to your VMs
+    save your changes to the parameters file
+
+12. run 'sh deploy-linuxVMs.sh'
+    Once completed test connectivity to your VMs using ssh '<adminUsername>@<fqdn or IP>'
+    Note how your RSA public key was deployed to the VM via the Azure Keyvault.
+
+13 - post-provisioning steps need to be identified.  NGINX website? 
+
+
