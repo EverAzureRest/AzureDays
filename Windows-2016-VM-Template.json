@@ -92,7 +92,7 @@
       }
     },
     "workspaceKey": {
-      "type": "string",
+      "type": "securestring",
       "metadata": {
         "description": "The workspace key for the Log Analytics Workspace"
       }
@@ -329,7 +329,7 @@
           "name": "install-bginfo",
           "location": "[resourceGroup().location]",
           "dependsOn": [
-            "[concat('Microsoft.Compute/virtualMachines/', parameters('vmNamePrefix')[copyIndex()])]"
+            "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('vmNamePrefix'), copyindex()))]"
           ],
           "tags": {
             "displayName": "install-bginfo"
@@ -350,12 +350,12 @@
           "apiVersion": "2015-06-15",
           "location": "[resourceGroup().location]",
           "dependsOn": [
-            "[concat('Microsoft.Compute/virtualMachines/', parameters('vmNamePrefix')[copyIndex()])]"
+            "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('vmNamePrefix'), copyindex()))]"
           ],
           "properties": {
             "type": "DSC",
             "publisher": "Microsoft.Powershell",
-            "typeHandlerVersion": "2.13",
+            "typeHandlerVersion": "2.19",
             "autoUpgradeMinorVersion": true,
             "protectedSettings": {
               "Items": {
@@ -420,10 +420,10 @@
           }
         },
         {
-          "name": "Microsoft.EnterpriseCloud.Monitoring",
+          "name": "MMA",
           "type": "extensions",
           "location": "[resourceGroup().location]",
-          "apiVersion": "2016-04-30-preview",
+          "apiVersion": "2015-06-15",
           "dependsOn": [
             "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('vmNamePrefix'), copyindex()))]"
           ],
