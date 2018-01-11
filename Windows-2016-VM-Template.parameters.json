@@ -13,6 +13,15 @@
         "secretName": "vmAdminPassword"
       }
     },
+    "windowsOSVersion": {
+      "value": ""
+    },
+    "osDiskStorageType": {
+      "value": ""
+    },
+    "vmSize": {
+      "value": ""
+    },
     "vmNamePrefix": {
       "value": ""
     },
