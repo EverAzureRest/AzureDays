@@ -17,16 +17,18 @@ Process Notes...
 4. open ./OMS/omsMaster.parameters.json in code editor
     specifiy empty parameter values
     MAKE NOTE OF OMS WORKSPACE NAME in open notepad
+    save changes to ./OMS/omsMaster.parameters.json
 
  - Open terminal emulator and:
     Run 'az login' and run through steps for device login
     Run 'az account show' - Make note in Notepad of your Subscription Name.
 
-5. open deploy-oms.sh script file
+5. open deploy-oms.sh script file in the code editor
     edit empty variables
+    make a note in your notepad of the name given to the SUPPORTRG variable
     save changes to script
 
-6. open a terminal emulator and change the working directory to the directory you cloned the repository into
+6. in the terminal emulator, change the working directory to the directory you cloned the repository into
     Run 'sh deploy-oms.sh'
     Script will output the OMS workspace ID - Note this value in your open notepad editor
 
@@ -36,6 +38,7 @@ Process Notes...
 
 8. open deploy-keyvault.sh in code editor
     edit empty variables
+    ensure the SUPPORTRG variable matches the value used in the OMS deployment script
     ensure workspace key matches value grabbed from portal in step 7
     ensure that the variable SSHPUBKEYFILE contains the path to your SSH public key file.
     save the changes to the script
@@ -47,6 +50,7 @@ Process Notes...
 
 10. open deploy-linuxVMs.sh in the code editor. 
     edit blank variables
+    save the script once done editing
     
 
 11. open Linux-CentOS-VM-Template.parameters.json in your code editor
@@ -57,8 +61,9 @@ Process Notes...
     save your changes to the parameters file
 
 12. run 'sh deploy-linuxVMs.sh'
-    Once completed test connectivity to your VMs using ssh '<adminUsername>@<fqdn or IP>'
+    Once completed test connectivity to your VMs using ssh '<adminUsername>@<fqdn or IP> -p 5022'
     Note how your RSA public key was deployed to the VM via the Azure Keyvault.
+    
 
 13 - post-provisioning steps need to be identified.  NGINX website? 
 

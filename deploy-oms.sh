@@ -8,7 +8,7 @@ SUPPORTRG=""
 #Name of the deployment subscription
 SUBSCRIPTIONNAME=""
 #Deployment Azure Region
-LOCATION="East US"
+LOCATION="EastUS"
 #OMS Template file locations
 OMSTEMPLATE=./OMS/omsMaster-deploy.json
 OMSPARAMSFILE=./OMS/omsMaster.parameters.json

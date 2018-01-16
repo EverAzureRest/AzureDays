@@ -8,7 +8,7 @@ SUPPORTRG=""
 #Name of the deployment subscription
 SUBSCRIPTIONNAME=""
 #Deployment Azure Region
-LOCATION="East US"
+LOCATION="EastUS"
 #KeyVault Name
 KVNAME=""
 #OMS Key from the OMS Deployment Script
@@ -23,6 +23,9 @@ echo "Account set to $SUBSCRIPTIONNAME"
 echo "Building KeyVault..."
 
 az keyvault create -n $KVNAME -g $SUPPORTRG -l $LOCATION --enabled-for-template-deployment
+
+#wait for the service endpoints to come up
+sleep 20
 
 #Create a secret for the OMS Key in Keyvault
 az keyvault secret set -n omssecret --vault-name $KVNAME --value $OMSKEY
