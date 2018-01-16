@@ -1,4 +1,6 @@
 ﻿###Azure Days Powershell deployment scripts
+#login to Azure
+login-azureRmAccount
 $artifactsLocation = "https://raw.githubusercontent.com/mmcsa/AzureDays/master"
 #$subscriptionId = "<subscriptionID>"
 $location = "East US"
@@ -9,6 +11,7 @@ $OpsResourceGroup = "azd-ops-rg-01"
 ###Deploy KeyVault and add secrets###
 $keyvaultName = "azd-kv-01"
 $vault = New-AzureRmKeyVault -VaultName $keyvaultName -ResourceGroupName $OpsResourceGroup -Location $location -EnabledForTemplateDeployment
+
 ###Copy resource ID of KeyVault for VM template parameters
 #Get admin credential from Automation account, prompt for password as secure string. 
 $adminCredential = Get-AzureRmAutomationCredential -ResourceGroupName $OpsResourceGroup -AutomationAccountName $autoAccountName -Name AzureCredentials
@@ -35,6 +38,9 @@ $autoAccountName = $account.AutomationAccountName
 $RegistrationInfo = $Account | Get-AzureRmAutomationRegistrationInfo
 $registrationUrl = $RegistrationInfo.Endpoint
 $registrationKey = $RegistrationInfo.PrimaryKey
+$omsAutoVariableName = New-AzureRmAutomationVariable -Encrypted false -Name "OPSINSIGHTS_WS_ID" -ResourceGroupName $OpsResourceGroup -AutomationAccountName $autoAccountName -Value $omsWorkspace.Name
+$omsAutoVariableKey = New-AzureRmAutomationVariable -Encrypted true -Name "OPSINSIGHTS_WS_KEY" -ResourceGroupName $OpsResourceGroup -AutomationAccountName $autoAccountName -Value $omsSecret
+
 
 ###VNet deployment##
 #create VNet Resource Group
@@ -47,14 +53,10 @@ New-AzureRmResourceGroupDeployment -Name azdVnetDeploy -ResourceGroupName $vnetr
 
 ###Load Balancer Deployment###
 
-New-AzureRmResourceGroup `
-  -ResourceGroupName $VNetresourceGroup `
-  -Location $location
-
 #create Public IP for LB
 $publicIP = New-AzureRmPublicIpAddress `
   -ResourceGroupName $VNetresourceGroup `
-  -Location $location`
+  -Location $location `
   -AllocationMethod Static `
   -Name myPublicIP
 
@@ -97,15 +99,32 @@ Add-AzureRmLoadBalancerRuleConfig `
   -Probe $probe
 Set-AzureRmLoadBalancer -LoadBalancer $lb
 
+#configure RDP NAT Rules
+$lb = Get-AzureRmLoadBalancer -Name azd-lb-01 -ResourceGroupName $vnetresourceGroup
+$lb | Add-AzureRmLoadBalancerInboundNatRuleConfig -Name RDP1 -FrontendIpConfiguration $lb.FrontendIpConfigurations[0] -Protocol TCP -FrontendPort 3441 -BackendPort 3389
+$lb | Add-AzureRmLoadBalancerInboundNatRuleConfig -Name RDP2 -FrontendIpConfiguration $lb.FrontendIpConfigurations[0] -Protocol TCP -FrontendPort 3442 -BackendPort 3389
+Set-AzureRmLoadBalancer -LoadBalancer $lb 
+
 #create VMs
+#run azdays-VmDeploy.ps1
 
 
+#add VMs to Load Balancer with RDP NAT rules mapped across multiple VMs. 
+$vms = Get-AzureRmVM -ResourceGroupName $vmResourceGroup
+$lb = Get-AzureRmLoadBalancer -Name azd-lb-01 -ResourceGroupName $vnetresourceGroup
+$vmCount = 0
+foreach ($vm in $vms)
+    {
 
+        
+        $nicId = $vm.NetworkProfile.NetworkInterfaces.id
+        $nicName = $nicId.split('/')[8]
+        $nic = get-azureRMNetworkInterface -Name $nicName -ResourceGroupName $vmResourceGroup
+        $nic.IpConfigurations[0].LoadBalancerBackendAddressPools=$lb.BackendAddressPools[$vmCount]
+        $nic.IpConfigurations[0].LoadBalancerInboundNatRules=$lb.InboundNatRules[$vmCount]
+        Set-AzureRmNetworkInterface -NetworkInterface $nic
+        $vmCount++
+    }
 
-#add VMs to Load Balancer
-
-
-
-
-
+    
 

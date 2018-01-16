@@ -1,4 +1,5 @@
-﻿#create VMs
+﻿#create multiple VMs from ARM Template with provided parameters. 
+#DSC and OMS extensions configured with DSC node config as selected. 
 Param
 (
     # prefix for VM names
@@ -16,11 +17,11 @@ Param
 
     # number of VMs to deploy
     [Parameter(Mandatory=$true, HelpMessage="number of identical VMs to deploy")]
-    [int]$numberofInstances,
+    [int]$numberOfInstances,
     
     # prefix for VM names
     [Parameter(Mandatory=$true, HelpMessage="DSC configuration to apply")]
-    [ValidateSet("IIS", "SQL")]
+    [ValidateSet("Web", "SQL")]
     [string]$nodeConfigurationName
 )
 # Function to log output with timestamp.
@@ -43,33 +44,35 @@ $adminSecret = Get-AzureKeyVaultSecret -VaultName $keyvault.VaultName -Name 'vmA
 $adminPassword = $adminSecret.SecretValueText
 
 
+
 Log-Output ("connected to subscription " + $armContext.Subscription +" as " + $armContext.Account.Id)
 Log-Output "secrets being retrieved from keyvault = $keyvault"
 
-#get VNET info
+#get VNET info and set subnet based on config selected
 $vnet = Get-AzureRmVirtualNetwork -ResourceGroupName $vnetresourceGroup
 $vnetName = $vnet.Name
 $subnets = $vnet.Subnets
-$vmSubnetName = $subnets[1].Name
+switch ($nodeConfigurationName)
+{
+    'Web' {$vmSubnetName = $subnets[1].Name}
+    'Sql' {$vmSubnetName = $subnets[2].Name}
+}
 
 Log-Output ("VMs will be placed in VNET = " + $vnetName + ", subnet = " + $vmSubnetName)
 
 #get Automation info for DSC
 $Account = Get-AzureRmAutomationAccount -ResourceGroupName $OpsResourceGroup
 $autoAccountName = $account.AutomationAccountName
-$RegistrationInfo = $Account | Get-AzureRmAutomationRegistrationInfo
-$registrationUrl = $RegistrationInfo.Endpoint
-$registrationKey = $RegistrationInfo.PrimaryKey
-#$registrationKey = $registrationPrimaryKey | ConvertTo-SecureString -AsPlainText -Force
 $adminCredential = Get-AzureRmAutomationCredential -ResourceGroupName $OpsResourceGroup -AutomationAccountName $autoAccountName -Name AzureCredentials
 $adminUser = $adminCredential.UserName.Split('@', 2)
 $adminUsername = $adminUser[0]
+$nodeConfiguration = "WebConfig.$nodeConfigurationName"
 
 #get OMS workspace info
 $omsWorkspace = Get-AzureRmOperationalInsightsWorkspace -ResourceGroupName $OpsResourceGroup
-$workspaceId = $omsWorkspace.Name
+$workspaceId = $omsWorkspace.CustomerId.Guid
 $workspaceSecret = Get-AzureKeyVaultSecret -VaultName $keyvault.VaultName -Name 'omsKey'
-$workspaceKey = $workspaceSecret.SecretValueText
+$workspaceKey = ($workspaceSecret.SecretValueText | ConvertTo-SecureString -AsPlainText -Force)
 
 Log-Output ("automation account $autoAccountName found")
 Log-Output ("DSC registration URL $registrationUrl will be used")
@@ -87,21 +90,33 @@ $params = @{
     availabilitySetName         = $availabilitySetName;
     vmNamePrefix                = $vmNamePrefix;
     vmSize                      = $VmSize;
+    numberOfInstances           = $numberOfInstances;
     virtualNetworkName          = $vnetName;
     virtualNetworkResourceGroup = $vnetResourceGroup;
     subnetName                  = $vmSubnetName;
-    workspaceId                 = $workspaceId;
-    workspaceKey                = $workspaceKey
-    registrationUrl             = $registrationUrl;
-    registrationKey             = $registrationKey;
-    nodeConfigurationName       = $nodeConfigurationName;
+    nodeConfigurationName       = $nodeConfiguration
 
 }
-# Deploy the Vm
+
+# Pull automation account info
+$RegistrationInfo = Get-AzureRmAutomationRegistrationInfo -ResourceGroupName $OpsResourceGroup -AutomationAccountName $AutoAccountName
+
+# Add parameter variables for DSC registration with key
+$registrationKey = ($RegistrationInfo.PrimaryKey | ConvertTo-SecureString -AsPlainText -Force)
+$RegistrationUrl = $RegistrationInfo.Endpoint
+# same for OMS workspace Key
+$workspaceKey = ($workspaceSecret.SecretValueText | ConvertTo-SecureString -AsPlainText -Force)
+# Add to parameters hash file
+$params.Add("registrationKey", $registrationKey)
+$params.Add("RegistrationUrl", $RegistrationUrl)
+$params.Add("workspaceID", $workspaceId)
+$params.Add("workspaceKey", $workspaceKey)
+
+##Deploy the Vms 
 Log-Output "Starting deployment."
 try {
     $Deployment = New-AzureRmResourceGroupDeployment `
-        -Name                        "AzdaysVmDeploy" `
+        -Name                        "NikeAzDayDeploy-$(([guid]::NewGuid()).Guid)" `
         -ResourceGroupName           $vmResourceGroup `
         -TemplateUri                 $vmTemplateUri `
         -TemplateParameterObject     $params `
