@@ -201,12 +201,51 @@
       "properties": {
         "securityRules": [
           {
-            "name": "default-allow-ssh",
+            "name": "default-allow-rdp",
             "properties": {
               "priority": 1000,
               "sourceAddressPrefix": "*",
               "protocol": "Tcp",
-              "destinationPortRange": "22",
+              "destinationPortRange": "3389",
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*"
+            }
+          },
+          {
+            "name": "default-allow-winrm",
+            "properties": {
+              "priority": 2000,
+              "sourceAddressPrefix": "*",
+              "protocol": "Tcp",
+              "destinationPortRange": "5986",
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*"
+            }
+          },
+          {
+            "name": "allow-https",
+            "properties": {
+              "priority": 3000,
+              "sourceAddressPrefix": "*",
+              "protocol": "Tcp",
+              "destinationPortRange": "443",
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*"
+            }
+          },
+          {
+            "name": "allow-http",
+            "properties": {
+              "priority": 4000,
+              "sourceAddressPrefix": "*",
+              "protocol": "Tcp",
+              "destinationPortRange": "80",
               "access": "Allow",
               "direction": "Inbound",
               "sourcePortRange": "*",
@@ -241,6 +280,9 @@
         "name": "nicLoop",
         "count": "[parameters('numberOfInstances')]"
       },
+      "dependsOn": [
+        "[parameters('networkSecurityGroupName')]"
+      ],
       "properties": {
         "ipConfigurations": [
           {
@@ -324,29 +366,32 @@
         },
       "resources": [
         {
-          "apiVersion": "2015-06-15",
+          "name": "MMA",
           "type": "extensions",
-          "name": "install-bginfo",
           "location": "[resourceGroup().location]",
+          "apiVersion": "2015-06-15",
           "dependsOn": [
             "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('vmNamePrefix'), copyindex()))]"
           ],
           "tags": {
-            "displayName": "install-bginfo"
+            "displayName": "MMA"
           },
           "properties": {
-            "publisher": "Microsoft.Compute",
-            "type": "CustomScriptExtension",
-            "typeHandlerVersion": "1.8",
+            "publisher": "Microsoft.EnterpriseCloud.Monitoring",
+            "type": "MicrosoftMonitoringAgent",
+            "typeHandlerVersion": "1.0",
             "autoUpgradeMinorVersion": true,
+            "settings": {
+              "workspaceId": "[parameters('workspaceId')]"
+            },
             "protectedSettings": {
-              "commandToExecute": "[variables('commandToExecute')]"
+              "workspaceKey": "[parameters('workspaceKey')]"
             }
           }
         },
         {
           "type": "extensions",
-          "name": "Microsoft.PowerShell.DSC",
+          "name": "Microsoft.Powershell.DSC",
           "apiVersion": "2015-06-15",
           "location": "[resourceGroup().location]",
           "dependsOn": [
@@ -418,31 +463,8 @@
               ]
             }
           }
-        },
-        {
-          "name": "MMA",
-          "type": "extensions",
-          "location": "[resourceGroup().location]",
-          "apiVersion": "2015-06-15",
-          "dependsOn": [
-            "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('vmNamePrefix'), copyindex()))]"
-          ],
-          "tags": {
-            "displayName": "MMA"
-          },
-          "properties": {
-            "publisher": "Microsoft.EnterpriseCloud.Monitoring",
-            "type": "MicrosoftMonitoringAgent",
-            "typeHandlerVersion": "1.0",
-            "autoUpgradeMinorVersion": true,
-            "settings": {
-              "workspaceId": "[parameters('workspaceId')]"
-            },
-            "protectedSettings": {
-              "workspaceKey": "[parameters('workspaceKey')]"
-            }
-          }
         }
+
       ]
       }
   ]

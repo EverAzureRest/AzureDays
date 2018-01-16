@@ -1,0 +1,41 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "storageAccountName": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Storage Account Name"
+      }
+    },
+    "storageLocation": {
+      "type": "string",
+      "defaultValue": "eastus",
+      "metadata": {
+        "description": "Storage Account Deployment Location"
+      }
+    }
+  },
+  "variables": {
+    "storageAccountType": "Standard_LRS"
+  },
+  "resources": [
+    {
+      "comments": "Storage Account Resource",
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[parameters('storageAccountName')]",
+      "apiVersion": "2015-06-15",
+      "location": "[parameters('storageLocation')]",
+      "properties": {
+        "accountType": "[variables('storageAccountType')]"
+      }
+    }
+  ],
+  "outputs": {
+    "primaryKey": {
+      "type": "string",
+      "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName')), '2015-06-15').key1]"
+    }
+  }
+}
