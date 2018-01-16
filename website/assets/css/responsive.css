@@ -1,0 +1,180 @@
+
+
+/*
+Author: Bootstrapthemes
+Author URI: http://www.bootstrapthemes.co
+*/
+
+/* Portrait tablets and medium desktops */
+@media (min-width: 992px) and (max-width: 1199px) {
+    body {
+        font-size: 1rem;
+    }
+
+    .header .navbar-form {
+        margin-right: 20px;
+    }
+
+}
+
+/* Portrait tablets and small desktops */
+@media (max-width: 991px) {
+    html {
+        font-size: 90%;
+    }
+    h3 {
+        font-size: 1.575rem;
+        line-height: 2rem;
+        font-family: 'open_sanslight';
+        margin-bottom: 15px;
+    }
+    h5 {
+        font-size: 1.1rem;
+        margin-bottom: .5rem;
+        color: #696f7c;
+        font-family: 'open_sanslight';
+        line-height: 1.475rem;
+    }
+    .header .navbar-form {
+        margin-right: 20px;
+    }
+	
+
+    .single_new_top_one p {
+        font-size: 0.875rem;
+        color: #44484f;
+        line-height: 1.2775rem;
+    }
+    .new_two_area .singel_two_left_vedio {
+        max-width: 100%;
+        margin-left:0;
+    }
+    .new_two_area .single_two_right_content p {
+        font-size: 1.5rem;
+        line-height: 2.3rem;
+        width: 80%;
+    }
+
+    .news_three_area .single_new_three_left {
+        max-width: 100%;
+        margin-left:0;
+        padding: 30px 10px 0px 30px;
+		
+    }
+
+    .single_news_four p {
+        color: #fff;
+        font-size: 1.5rem;
+        line-height: 2.5rem;
+        font-family: 'open_sanslight_italic';
+        margin-bottom: 20px;
+        max-width: 90%;
+    }
+
+
+
+
+
+}
+/* Landscape phones and portrait tablets */
+@media  (max-width: 768px) {
+    html {
+        font-size: 80%;
+    }
+	
+    .single_widget_right .navbar-form {
+        padding: 0px 15px;
+    }
+    .single_widget_right .submit_btn span {
+        line-height: 50px;
+    }
+	.top_new_one_left{
+		max-width:100%;
+		float: none;
+	}
+    .single_new_top_one {
+        padding: 30px 15px 40px 20px;
+        max-width: 90%;
+        margin-left: 10%;
+		min-height: inherit;
+    }
+	.top_news_right_img img {
+		height: inherit;
+	}
+    .about {
+        background: #835fa8;
+        height: auto;
+        text-align: center;
+    }
+    .main_feature_area{
+        text-align: center;
+    }
+    .sections {
+        padding-top: 30px;
+    }
+    .single_feature {
+        margin-top: 40px;
+    }
+
+    .single_portfolio a {
+        left: 36%;
+        top: 20%;
+    }
+    .main_feature_area:before {
+        left: 40%;
+    }
+
+
+
+}
+
+
+
+/* Landscape phones and smaller */
+@media (max-width: 479px) {
+    html {
+        font-size: 65%;
+    }
+
+
+    .single_widget_right .submit_btn span {
+        line-height: 54px;
+    }
+    .single_portfolio a {
+        left: 20%;
+        top: 0%;
+    }
+    .main_feature_area:before {
+        left: 40%;
+    }   
+
+
+
+}
+
+
+
+@media (max-width: 320px) {
+
+
+    html {
+        font-size: 60.5%;
+    }
+    .single_portfolio a {
+        left: 15%;
+        top: 0%;
+    }
+    .single_portfolio a.btn {
+        margin-top: 12px;
+    }
+    .main_feature_area:before {
+        left: 30%;
+    }
+
+
+
+
+
+
+}
+

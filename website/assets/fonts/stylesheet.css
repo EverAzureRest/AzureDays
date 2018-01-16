@@ -1,0 +1,30 @@
+@font-face {
+	font-family: 'open_sansitalic';
+	font-weight: normal;
+	font-style: normal;
+	src:url('opensans-italic.woff2') format('woff2');
+}
+@font-face {
+	font-family: 'open_sanslight';
+	font-weight: normal;
+	font-style: normal;
+	src:url('opensans-light.woff2') format('woff2');
+}
+@font-face {
+	font-family: 'open_sanslight_italic';
+	font-weight: normal;
+	font-style: normal;
+	src:url('opensans-lightitalic.woff2') format('woff2');
+}
+@font-face {
+	font-family: 'open_sansregular';
+	font-weight: normal;
+	font-style: normal;
+	src:url('opensans-regular.woff2') format('woff2');
+}
+@font-face {
+	font-family: 'open_sanssemibold';
+	font-weight: normal;
+	font-style: normal;
+	src:url('opensans-semibold.woff2') format('woff2');
+}
