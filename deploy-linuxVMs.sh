@@ -6,7 +6,7 @@
 #Specify VM Resource Group Name
 VMRG="azd-vm-rg"
 #Resource Group Name for the VNET
-VNETRG="Azd-VNET-RG"
+VNETRG="azd-vnet-rg"
 #VNET Name - make sure this is the same value as in ./simplevnet.parameters.json
 VNET="AzureDaysVNET"
 #Name of the deployment subscription
@@ -18,12 +18,14 @@ LBNAME="azd-lb"
 #Leave these values
 VNETTEMPLATEFILE=./simplevnet.json
 VNETPARAMSFILE=./simplevnet.parameters.json
-VMTEMPLATEFILE=./Linux-CentOS-VM-Template.json
-VMPARAMSFILE=./Linux-CentOS-VM-Template.parameters.json
+VMTEMPLATEFILE=./Linux-Ubuntu-VM-Template.json
+VMPARAMSFILE=./Linux-Ubuntu-VM-Template.parameters.json
 #Name of the Public IP address for the NLB
 PUBLICIPNAME=""
-#DNS Name servers are accessed by - must be unique to the region, so be creative!
+#DNS Name servers are accessed by
 DNSNAME=""
+#Cloud-init yml configuration
+CLOUDINIT="./cloudconfig-ubuntu.txt"
 
 az account set --subscription $SUBSCRIPTIONNAME
 echo "Account set to $SUBSCRIPTIONNAME"
@@ -42,8 +44,15 @@ echo "Building the VM ResourceGroup $VMRG..."
 az group create --name $VMRG --location $LOCATION
 
 echo "Deploying VMs..."
-az group deployment create -n vmdeployment -g $VMRG --template-file $VMTEMPLATEFILE --parameters @$VMPARAMSFILE
+INITCONTENT=`cat "$CLOUDINIT"|base64 -w 0`
+echo "\"customData\":{\"value\":\"$INITCONTENT\"}" > updatepattern.txt
 
+cat $VMPARAMSFILE | tr '\n' ' ' | sed "s/\"customData[^{]*{[^}]*}/$(sed 's:/:\\/:g' updatepattern.txt)/" > params.json
+
+az group deployment create -n vmdeployment -g $VMRG --template-file $VMTEMPLATEFILE --parameters @params.json
+
+rm updatepattern.txt
+rm params.json
 
 echo "Deploying Public IP..."
 az network public-ip create -g $VNETRG -n $PUBLICIPNAME -l $LOCATION --dns-name $DNSNAME --allocation-method Dynamic
@@ -65,7 +74,7 @@ IPCONFIG2=$(az network nic show -n $NIC2NAME -g $VMRG --query "ipConfigurations[
 LBBACKENDPOOLID=$(az network lb address-pool show -g $VNETRG --lb-name $LBNAME -n lbbackendpool --query "id" | tr -d '"')
 LBNATID=$(az network lb inbound-nat-rule show -g $VNETRG --lb-name $LBNAME -n inbound-nat --query "id" | tr -d '"')
 
-echo "Attaching VMs to Load Balancer Backend Pool..."
+echo "Attaching VMs to Load Balancer Backend Pool"
 az network nic ip-config update -g $VMRG --nic-name $NIC1NAME --lb-address-pools $LBBACKENDPOOLID --lb-inbound-nat-rules $LBNATID --lb-name $LBNAME --name $IPCONFIG1
 az network nic ip-config update -g $VMRG --nic-name $NIC2NAME --lb-address-pools $LBBACKENDPOOLID --lb-name $LBNAME --name $IPCONFIG2
 

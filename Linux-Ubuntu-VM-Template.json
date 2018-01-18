@@ -1,0 +1,270 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "adminUsername": {
+      "type": "string",
+      "minLength": 1,
+      "metadata": {
+        "description": "Admin username"
+      }
+    },
+    "sshRSAPath": {
+      "type": "string",
+      "defaultValue": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]",
+      "metadata": {
+        "description": "Path to the RSA public key for SSH"
+      }
+    },
+    "sshRSAPublicKey": {
+      "type": "string",
+      "metadata": {
+        "description": "PEM-encoded public key"
+      }
+    },
+    "OSVersion": {
+      "type": "string",
+      "defaultValue": "16.04-LTS",
+      "allowedValues": [
+        "16.04-LTS"
+      ],
+      "metadata": {
+        "description": "The CentOS Enterprise Linux version for the VM"
+      }
+    },
+    "vmSize": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "Standard_DS2_v2",
+      "allowedValues": [
+        "Standard_DS2_v2"
+      ],
+      "metadata": {
+        "description": "Size of the virtual machine, must be available in the virtual machine's location"
+      }
+    },
+    "numberOfInstances": {
+      "type": "int",
+      "minValue": 1,
+      "defaultValue": 1,
+      "maxValue": 10,
+      "metadata": {
+        "description": "Number of VM instances to be created behind during resource loop"
+      }
+    },
+    "availabilitySetName": {
+      "type": "string",
+      "metadata": {
+        "description": "name for Availability Set to put VMs into"
+      }
+    },
+    "vmNamePrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "String to prefix the generation of the VM Name"
+      }
+    },
+    "virtualNetworkName": {
+      "type": "string"
+    },
+    "virtualNetworkResourceGroup": {
+      "type": "string"
+    },
+    "subnetName": {
+      "type": "string"
+    },
+    "networkSecurityGroupName": {
+      "type": "string",
+      "defaultValue": "DefaultNSG"
+    },
+    "workspaceID": {
+      "type": "string",
+      "metadata": {
+        "description": "The ID of the OMS Log Analytics Workspace"
+      }
+    },
+    "workspaceKey": {
+      "type": "string",
+      "metadata": {
+        "description": "The workspace key for the Log Analytics Workspace"
+      }
+    },
+    "customData": {
+        "type": "string",
+        "metadata": {
+            "description": "Base64-encoded cloud-init yaml file to deploy nginx and configure it"
+        }
+    }
+  },
+  "variables": {
+    "imagePublisher": "Canonical",
+    "imageOffer": "UbuntuServer",
+    "vnetId": "[resourceid(parameters('virtualNetworkResourceGroup'), 'Microsoft.Network/virtualNetworks', parameters('virtualNetworkName'))]",
+    "subnetRef": "[concat(variables('vnetId'), '/subnets/', parameters('SubnetName'))]",
+    "networkInterfaceNamePrefix": "VNic"
+  },
+  "resources": [
+    {
+      "name": "[parameters('networkSecurityGroupName')]",
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2017-10-01",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "default-allow-ssh",
+            "properties": {
+              "priority": 1000,
+              "sourceAddressPrefix": "*",
+              "protocol": "Tcp",
+              "destinationPortRange": "22",
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Compute/availabilitySets",
+      "name": "[parameters('availabilitySetName')]",
+      "apiVersion": "2017-12-01",
+      "sku": {
+        "name": "Aligned"
+      },
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "platformFaultDomainCount": 3,
+        "platformUpdateDomainCount": 5
+      }
+    },
+    {
+      "apiVersion": "2017-10-01",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[concat(parameters('vmNamePrefix'), copyindex(), variables('networkInterfaceNamePrefix'))]",
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "NetworkInterface"
+      },
+      "copy": {
+        "name": "nicLoop",
+        "count": "[parameters('numberOfInstances')]"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "[concat(parameters('vmNamePrefix'), copyindex(), '-ipconfig')]",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('subnetRef')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2017-12-01",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[concat(parameters('vmNamePrefix'), copyindex())]",
+      "copy": {
+        "count": "[parameters('numberOfInstances')]",
+        "name": "virtualMachineLoop"
+      },
+      "location": "[resourceGroup().location]",
+      "tags": {
+        "displayName": "VirtualMachines"
+      },
+      "dependsOn": [
+        "nicLoop",
+        "[concat('Microsoft.Compute/availabilitySets/', parameters('availabilitySetName'))]"
+      ],
+      "properties": {
+        "availabilitySet": {
+          "id": "[resourceId('Microsoft.Compute/availabilitySets', parameters('availabilitySetName'))]"
+        },
+          "hardwareProfile": {
+            "vmSize": "[parameters('vmSize')]"
+          },
+          "OSProfile": {
+            "computerName": "[concat(parameters('vmNamePrefix'), copyIndex())]",
+            "adminUsername": "[parameters('adminUsername')]",
+            "customData": "[parameters('customData')]",
+            "linuxConfiguration": {
+              "ssh": {
+                "publicKeys": [
+                  {
+                    "path": "[parameters('sshRSAPath')]",
+                    "keyData": "[parameters('sshRSAPublicKey')]"
+                  }
+                ]
+              }
+            }
+          },
+          "storageProfile": {
+            "imageReference": {
+              "publisher": "[variables('imagePublisher')]",
+              "offer": "[variables('imageOffer')]",
+              "sku": "[parameters('OSVersion')]",
+              "version": "latest"
+            },
+            "osDisk": {
+              "name": "[concat(parameters('vmNamePrefix'), copyIndex(), 'osdisk')]",
+              "caching": "ReadWrite",
+              "createOption": "FromImage"
+            },
+            "dataDisks": [
+              {
+                "name": "[concat(parameters('vmNamePrefix'), copyIndex(), 'datadisk')]",
+                "lun": 0,
+                "diskSizeGB": 100,
+                "createOption": "Empty",
+                "caching": "ReadWrite"
+              }
+            ]
+          },
+          "networkProfile": {
+            "networkInterfaces": [
+              {
+                "id": "[resourceId('Microsoft.Network/networkInterfaces', concat(parameters('vmNamePrefix'), copyindex(), variables('networkInterfaceNamePrefix')))]"
+              }
+            ]
+          },
+          "diagnosticsProfile": {
+            "bootDiagnostics": {
+              "enabled": false
+            }
+          }
+        },
+        "resources": [
+           {
+            "name": "Microsoft.EnterpriseCloud.Monitoring",
+            "type": "extensions",
+            "location": "[resourceGroup().location]",
+            "apiVersion": "2017-12-01",
+            "dependsOn": [
+              "[concat('Microsoft.Compute/virtualMachines/', concat(parameters('vmNamePrefix'), copyindex()))]"
+            ],
+            "tags": {
+              "displayName": "MMA"
+            },
+            "properties": {
+              "publisher": "Microsoft.EnterpriseCloud.Monitoring",
+              "type": "OmsAgentForLinux",
+              "typeHandlerVersion": "1.0",
+              "autoUpgradeMinorVersion": true,
+              "settings": {
+                "workspaceId": "[parameters('workspaceId')]"
+              },
+              "protectedSettings": {
+                "workspaceKey": "[parameters('workspaceKey')]"
+              }
+            }
+          }
+        ]
+      }
+  ]
+}

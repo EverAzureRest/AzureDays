@@ -4,7 +4,7 @@
 #Azure CLI v2.0 required for this script to work https://docs.microsoft.com/en-us/cli/azure/install-azure-cli
 
 #Resource Group Name for OMS and Keyvault
-SUPPORTRG=""
+SUPPORTRG="azd-support-rg"
 #Name of the deployment subscription
 SUBSCRIPTIONNAME=""
 #Deployment Azure Region

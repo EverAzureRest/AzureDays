@@ -4,13 +4,13 @@
 #Azure CLI v2.0 required for this script to work https://docs.microsoft.com/en-us/cli/azure/install-azure-cli
 
 #Resource Group Name for OMS and Keyvault
-SUPPORTRG=""
+SUPPORTRG="azd-support-rg"
 #Name of the deployment subscription
 SUBSCRIPTIONNAME=""
 #Deployment Azure Region
 LOCATION="EastUS"
 #KeyVault Name
-KVNAME=""
+KVNAME="azd-kevault"
 #OMS Key from the OMS Deployment Script
 OMSKEY=""
 #RSA Public Key Path - change if not the default path to your key
@@ -23,9 +23,6 @@ echo "Account set to $SUBSCRIPTIONNAME"
 echo "Building KeyVault..."
 
 az keyvault create -n $KVNAME -g $SUPPORTRG -l $LOCATION --enabled-for-template-deployment
-
-#wait for the service endpoints to come up
-sleep 20
 
 #Create a secret for the OMS Key in Keyvault
 az keyvault secret set -n omssecret --vault-name $KVNAME --value $OMSKEY

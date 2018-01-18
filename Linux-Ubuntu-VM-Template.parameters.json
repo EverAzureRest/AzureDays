@@ -1,0 +1,49 @@
+{
+"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json",
+"contentVersion": "1.0.0.0",
+  "parameters": {
+    "adminUsername": {
+      "value": "adminuser"
+    },
+    "sshRSAPublicKey": {
+      "reference": {
+        "keyVault": {
+          "id": "<keyvault ID>"
+        },
+        "secretName": "sshsecret"
+      }
+    },
+    "vmNamePrefix": {
+      "value": "azdaysvm0"
+    },
+    "numberOfInstances": {
+      "value": 2
+    },
+    "availabilitySetName": {
+      "value": "azdays-as01"
+    },
+    "virtualNetworkName": {
+      "value": "AzureDaysVnet"
+    },
+    "virtualNetworkResourceGroup": {
+      "value": "Azd-VNET-RG"
+    },
+    "subnetName": {
+      "value": "Subnet1"
+    },
+    "workspaceID": {
+      "value": "00ed8dca-b278-4ef2-90cb-d6d9df590346"
+    },
+    "workspaceKey": {
+      "reference": {
+        "keyVault": {
+          "id": "<keyvault ID>"
+        },
+        "secretName": "omssecret"
+      }
+    },
+    "customData": {
+        "value": "GEN-UNIQUE-32"
+    }
+  }
+}

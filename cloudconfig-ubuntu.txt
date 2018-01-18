@@ -1,0 +1,20 @@
+#cloud-config
+apt_upgrade: true
+packages:
+  - nginx
+  - nginx-core
+write_files:
+  - owner: www-data:www-data
+  - path: /etc/nginx/sites-available/default
+    content: |
+      server {
+        listen 80;
+        keepalive_timeout 5;
+        root /var/www/html;
+        location / {
+          proxy_pass https://<storage_account_name>.blob.core.windows.net/website/;
+          proxy_http_version 1.1;
+        }
+      }
+runcmd:
+    - service nginx restart
