@@ -426,6 +426,20 @@
           }
         },
         {
+          "name": "[variables('psModules').cAzureStorage.name]",
+          "type": "Modules",
+          "apiVersion": "2015-10-31",
+          "tags": {},
+          "dependsOn": [
+            "[concat('Microsoft.Automation/automationAccounts/', parameters('omsAutomationAccountName'))]"
+          ],
+          "properties": {
+            "contentLink": {
+              "uri": "[variables('psModules').cAzureStorage.url]"
+            }
+          }
+        },
+        {
           "name": "[variables('runbooks').omsABUscript.name]",
           "type": "runbooks",
           "apiVersion": "2015-10-31",
