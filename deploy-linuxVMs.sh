@@ -15,16 +15,16 @@ SUBSCRIPTIONNAME=""
 LOCATION="EastUS"
 #LoadBalancer Name
 LBNAME="azd-lb"
+#Name of the Public IP address for the NLB - needs to be unique, so use a creative convention
+PUBLICIPNAME=""
+#DNS simple name for the load balancer. Will be appended to FQDN.  Must be unique per region, so use a creative convention. 
+DNSNAME=""
 #Leave these values
 VNETTEMPLATEFILE=./simplevnet.json
 VNETPARAMSFILE=./simplevnet.parameters.json
 VMTEMPLATEFILE=./Linux-Ubuntu-VM-Template.json
 VMPARAMSFILE=./Linux-Ubuntu-VM-Template.parameters.json
-#Name of the Public IP address for the NLB
-PUBLICIPNAME=""
-#DNS Name servers are accessed by
-DNSNAME=""
-#Cloud-init yml configuration
+#Cloud-init yml configuration - don't change this
 CLOUDINIT="./cloudconfig-ubuntu.txt"
 
 az account set --subscription $SUBSCRIPTIONNAME
@@ -81,5 +81,5 @@ az network nic ip-config update -g $VMRG --nic-name $NIC2NAME --lb-address-pools
 FQDN=$(az network public-ip show -n $PUBLICIPNAME -g $VNETRG --query "dnsSettings.fqdn")
 IP=$(az network public-ip show -n $PUBLICIPNAME -g $VNETRG --query "ipAddress")
 
-echo "All resources are complete.  Please login via SSH to $FQDN or $IP over port 5022"
+echo "All resources are complete.  Please login to $IP over port 5022: ssh adminuser@$IP -p 5022. Access the load balanced website at http://$FQDN/index.html"
 
