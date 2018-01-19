@@ -2,6 +2,14 @@
 #DSC and OMS extensions configured with DSC node config as selected. 
 Param
 (
+    # name of VM resource group
+    [Parameter(Mandatory=$true, HelpMessage="Name of Resource Group for VMs")]
+    [string]$vmResourceGroup,
+
+    # name of Resource Group with Automation account deployed
+    [Parameter(Mandatory=$true, HelpMessage="Name of Resource Group for automation acccount")]
+    [string]$opsResourceGroup,
+    
     # prefix for VM names
     [Parameter(Mandatory=$true, HelpMessage="prefix for VM names")]
     [string]$vmNamePrefix,
@@ -12,16 +20,16 @@ Param
 
     # VM Size
     [Parameter(Mandatory=$True, HelpMessage="Enter the Vm Size.")]
-    [ValidateSet("Standard_D2_v2", "Standard_D3_v2")]
+    [ValidateSet("Standard_D1_v2", "Standard_D2_v2")]
     [String]$VmSize,
 
     # number of VMs to deploy
     [Parameter(Mandatory=$true, HelpMessage="number of identical VMs to deploy")]
     [int]$numberOfInstances,
     
-    # prefix for VM names
+    # DSC Node config to use
     [Parameter(Mandatory=$true, HelpMessage="DSC configuration to apply")]
-    [ValidateSet("Web", "SQL")]
+    [ValidateSet("Web")]
     [string]$nodeConfigurationName
 )
 # Function to log output with timestamp.
@@ -31,42 +39,36 @@ function Log-Output($msg) {
 
 #initial steps --if you have access to multiple subscriptions uncomment below & add correct sub name
 #login-azureRmAccount
-$subscription = Get-AzureRmSubscription
-$subscriptionName = $subscription[0].Name
-$armContext = Set-AzureRmContext -Subscription $subscriptionName
-$artifactsLocation = "https://raw.githubusercontent.com/Lorax79/AzureDays/master"
+#$subscription = Get-AzureRmSubscription
+#$subscriptionName = $subscription[0].Name
+#$armContext = Set-AzureRmContext -Subscription $subscriptionName
 $location = "East US"
-$vnetresourceGroup = "azd-vnet-rg-01"
-$vmResourceGroup = "azd-vm-rg-01"
-$OpsResourceGroup = "azd-ops-rg-01"
 $keyvault = Get-AzureRmKeyVault -ResourceGroupName $OpsResourceGroup
-$adminSecret = Get-AzureKeyVaultSecret -VaultName $keyvault.VaultName -Name 'vmAdminPassword'
-$adminPassword = $adminSecret.SecretValueText
-
-
 
 Log-Output ("connected to subscription " + $armContext.Subscription +" as " + $armContext.Account.Id)
 Log-Output "secrets being retrieved from keyvault = $keyvault"
 
-#get VNET info and set subnet based on config selected
-$vnet = Get-AzureRmVirtualNetwork -ResourceGroupName $vnetresourceGroup
-$vnetName = $vnet.Name
-$subnets = $vnet.Subnets
-switch ($nodeConfigurationName)
-{
-    'Web' {$vmSubnetName = $subnets[1].Name}
-    'Sql' {$vmSubnetName = $subnets[2].Name}
-}
-
-Log-Output ("VMs will be placed in VNET = " + $vnetName + ", subnet = " + $vmSubnetName)
-
-#get Automation info for DSC
+#get Automation info for DSC & retrieve variables and keys
+$adminSecret = Get-AzureKeyVaultSecret -VaultName $keyvault.VaultName -Name 'vmAdminPassword'
+$adminPassword = ($adminSecret.SecretValueText | ConvertTo-SecureString -AsPlainText -Force)
 $Account = Get-AzureRmAutomationAccount -ResourceGroupName $OpsResourceGroup
 $autoAccountName = $account.AutomationAccountName
 $adminCredential = Get-AzureRmAutomationCredential -ResourceGroupName $OpsResourceGroup -AutomationAccountName $autoAccountName -Name AzureCredentials
 $adminUser = $adminCredential.UserName.Split('@', 2)
 $adminUsername = $adminUser[0]
+$vnetResourceVar = (Get-AzureRmAutomationVariable -ResourceGroupName $opsResourceGroup -AutomationAccountName $autoAccountName -Name "VnetResourceGroup").Value
+$vnetResourceGroup = "$vnetResourceVar" ##for whatever reason some retreived vars can't be directly passed unless redeclared as strings 
+$artifactsLocation = (Get-AzureRmAutomationVariable -ResourceGroupName $opsResourceGroup -AutomationAccountName $autoAccountName -Name "ArtifactsLocation").Value
+
+#get VNET info and set subnet based on config selected
+$vnet = Get-AzureRmVirtualNetwork -ResourceGroupName $vnetresourceGroup
+$vnetName = $vnet.Name
+$subnets = $vnet.Subnets
+$vmSubnetName = $subnets[1].Name
+
 $nodeConfiguration = "WebConfig.$nodeConfigurationName"
+
+Log-Output ("VMs will be placed in VNET = " + $vnetName + ", subnet = " + $vmSubnetName)
 
 #get OMS workspace info
 $omsWorkspace = Get-AzureRmOperationalInsightsWorkspace -ResourceGroupName $OpsResourceGroup
@@ -80,13 +82,11 @@ Log-Output ("OMS workspace " + $omsWorkspace.Name + " will be used for Log Analy
 
 New-AzureRmResourceGroup -Name $vmResourceGroup -Location $location
 
-#$vmTemplateUri = "$artifactsLocation/Windows-2016-VM-Template.json"
-$vmTemplateUri = "C:\Users\mamorga\Source\Repos\AzureDays\Windows-2016-VM-Template.json"
+$vmTemplateUri = "$artifactsLocation/Windows-2016-VM-Template.json"
 
 Log-Output "Setting template parameters."
-$params = @{
+$params =[ordered]@{
     adminUsername               = $adminUsername;
-    adminPassword               = $adminPassword
     availabilitySetName         = $availabilitySetName;
     vmNamePrefix                = $vmNamePrefix;
     vmSize                      = $VmSize;
@@ -106,7 +106,9 @@ $registrationKey = ($RegistrationInfo.PrimaryKey | ConvertTo-SecureString -AsPla
 $RegistrationUrl = $RegistrationInfo.Endpoint
 # same for OMS workspace Key
 $workspaceKey = ($workspaceSecret.SecretValueText | ConvertTo-SecureString -AsPlainText -Force)
-# Add to parameters hash file
+
+# Add secure strings to parameters hash file separately. 
+$params.Add("adminPassword", $adminPassword)
 $params.Add("registrationKey", $registrationKey)
 $params.Add("RegistrationUrl", $RegistrationUrl)
 $params.Add("workspaceID", $workspaceId)
