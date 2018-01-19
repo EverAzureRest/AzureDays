@@ -112,6 +112,10 @@
       "xPSDesiredStateConfiguration": {
         "name": "xPSDesiredStateConfiguration",
         "url": "https://devopsgallerystorage.blob.core.windows.net/packages/xpsdesiredstateconfiguration.8.0.0.nupkg"
+      },
+      "cAzureStorage": {
+        "name": "cAzureStorage",
+        "url": "https://devopsgallerystorage.blob.core.windows.net/packages/cazurestorage.1.0.0.1.nupkg"
       }
 
     },
