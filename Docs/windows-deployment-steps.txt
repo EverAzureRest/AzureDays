@@ -1,0 +1,125 @@
+	1. Login to Azure
+		a. login-azureRmAccount
+		
+	2. Setup Variables needed for Resource Groups & bits
+		$artifactsLocation = "https://raw.githubusercontent.com/Lorax79/AzureDays/master"
+		$location = "East US"
+		$vnetresourceGroup = "azd-vnet-rg-01"
+		$vmResourceGroup = "azd-vm-rg-01"
+		$OpsResourceGroup = "azd-ops-rg-01"
+	3. Deploy KeyVault with 'EnabledForTemplateDeployment' flag
+		a. New-AzureRmKeyVault
+		b. Copy full ResourceId of KeyVault & save in text file for parameters file later. 
+	4. Deploy OMS, Automation Account, Storage using 'omsMaster-Deploy.json' template
+		a. Edit the omsMaster.parameters file
+			i. Keep regions as East US. Admin user/password are for automation account credential, VM admin password will be prompted for later.
+		b. Create new resource group using $OpsResourceGroup 
+		c. New-AzureRmResourceGroupDeployment -Name azdOmsDeploy -ResourceGroupName $vnetresourceGroup -TemplateFile $vnetTemplatePath -TemplateParameterFile $vnetparameterPath -Mode Incremental -Verbose
+		d. Retrieve workspace info, put key in KeyVault. **MUST CONVERT TO SECURESTRING FIRST**
+			i. Get-AzureRmOperationalInsightsWorkspace
+			ii. Get-AzureRmOperationalInsightsWorkspaceSharedKeys
+			iii. ConvertTo-SecureString
+			iv. Set-AzureKeyVaultSecret
+	5. Retrieve admin credentials from Automation account, Prompt for VM admin user password.
+		a. Get-AzureRmAutomationCredential
+		b. Alternately create new credential and store password in keyvault as 'vmAdminPassword'
+	6. Copy Website content from Git repo to Storage Account
+		a. Retrieve keys with Get-AzureRmStorageAccount , Get-AzureRmStorageAccountKey
+		b. Create storage context with New-AzureStorageContext.
+		c. Create new container named "website-bits"
+		d. Start-AzureStorageBlobCopy -AbsoluteUri "$artifactsLocation/website.zip" -DestContainer $container.Name -DestBlob "azdays-website.zip" -DestContext $Context
+	7. Retrieve automation account info for DSC configuration, set automation variables for later. 
+		a. Get-AzureRmAutomationAccount
+		b. Get-AzureRmAutomationRegistrationInfo
+		c. New-AzureRmAutomationVariable - create 4 new variables
+			i. "vnetResourceGroup"
+			ii. "artifactsLocation"
+			iii. "saname" (for storage account name)
+			iv. "sakey" (for storage key) **encrypted**
+	8. Deploy VNET from template 
+		a. Create new resource group $vnetResourceGroup
+		b. Parameters can be left or changed as desired
+		c.  deploy with:
+		$vnetTemplatePath = "$artifactsLocation/simplevnet.json"
+		$vnetparameterPath = "$artifactsLocation\simplevnet.parameters.json"
+		New-AzureRmResourceGroupDeployment -Name azdVnetDeploy -ResourceGroupName $vnetresourceGroup -TemplateFile $vnetTemplatePath -TemplateParameterFile $vnetparameterPath -Mode Incremental -Verbose
+		
+	9. Deploy a public facing Load Balancer
+		a. Create a new Public IP
+			i. New-AzureRmPublicIpAddress , set as static. 
+		b. Create a new Front End IP Config
+			i. New-AzureRmLoadBalancerFrontendIpConfig using public IP you just created. 
+		c. Create a new empty backend pool
+			i. New-AzureRmLoadBalancerBackendAddressPoolConfig
+		d. Create load balancer with the above config
+			i. New-AzureRmLoadBalancer
+		e. Create a port 80 probe
+			i. Add-AzureRmLoadBalancerProbeConfig
+		f. Add a port 80 load balancer rule
+			i. Add-AzureRmLoadBalancerRuleConfig
+		g. Apply updated config to load balancer
+			i. Set-AzureRmLoadBalancer
+		h. Configure RDP NAT rules
+			i. Add-AzureRmLoadBalancerInboundNatRuleConfig
+			ii. Create 2 rules named 'RDP1' and 'RDP2'
+			iii. Use ports 3441 & 3442 for front end
+			iv. Use 3389 for backend port. 
+		i. Apply the updated config
+			i. Set-AzureRmLoadBalancer
+	10. Upload & Compile DSC configuration script to Automation account
+		a. /DSC/Webconfig.ps1
+		b. Compilation can be done from portal (easiest for this exercise) or PS. No custom data needed. 
+	11. Create VMs from script
+		a. Azdays-vmDeploy.ps1
+		b. Assuming all variables & secrets above exist, parameters needed for script are:
+			i. Name for VM resource group
+			ii. Name for Ops resource group
+			iii. Prefix for the VM names
+			iv. Name for an availability set
+			v. Size (SKU) for the VMs. Use 'Standard_D2_v2'
+			vi. DSC Node config name (use 'Web')
+	12. Add VMs to load balancer backend pool
+		a. get-azureRMNetworkInterface
+		b. Set LoadBalancerBackendAddressPools in the NIC IP Configuration
+		c. Reapply config
+		d. The psDeployMaster script will loop through both VMs and attach to LB backend. 
+	13. Apply NSG to Subnet
+	14. Validate / test
+		a. DSC compliance
+		b. RDP to load balancer public IP on 3441, 3442
+		c. http:// to load balancer IP
+	15. Create an IIS Windows container using Docker from running site. 
+		a. RDP to one of the VMs
+		b. Powershell, create directory c:\users\<you>\docker & CD to it for context. 
+		c. Copy the contents of 'C:\inetpub\wwwroot\azdays-website' to your new '/docker' directory
+		d. 'docker pull microsoft/iis'
+		e. Create a Dockerfile to build app. Copy/paste text below into text editor, save as "Dockerfile" with no extension in your /docker directory. (wrap filename in quotes if using notepad when saving)
+		
+			# escape=`
+			
+			FROM microsoft/iis
+			RUN mkdir C:\site
+			
+			RUN powershell -NoProfile -Command `
+				Import-module IISAdministration; `
+				New-IISSite -Name "Site" -PhysicalPath C:\site -BindingInformation "*:8000:"
+			EXPOSE 8000
+			
+			ADD \website /site
+		f.  Run 'docker build' to build the container w/ your site on port 8000
+		$ docker build -t iis-site .$ docker run -d -p 8000:8000 --name my-running-site iis-site
+		g.  get IP address from the container
+		h. docker inspect -f "{{ .NetworkSettings.Networks.nat.IPAddress }}" my-running-site
+		i. Open IE, scream at IE, goto http://<containerIP>:8000 and you should see your site running. 
+	16. OMS
+	17. Backup
+	
+		
+	
+			
+		
+		
+	
+		
+		
+	
