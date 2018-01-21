@@ -7,10 +7,10 @@ Configuration WebConfig
     Import-DscResource -ModuleName PSDesiredStateConfiguration
     Import-DscResource -ModuleName cAzureStorage
     
-    $tempdir = "C:\temp"
-    $storagekey = Get-AutomationVariable -Name "sakey"
-    $storageaccountname = Get-AutomationVariable -Name "saname"
-    $destpath = "C:\inetpub\wwwroot\WebApp"
+    $tempdir = 'C:\temp'
+    $storagekey = Get-AutomationVariable -Name 'sakey'
+    $storageaccountname = Get-AutomationVariable -Name 'saname'
+    $destpath = 'C:\inetpub\wwwroot\WebApp'
 
       Node Web
       {
@@ -18,33 +18,33 @@ Configuration WebConfig
         #Install the IIS Role
         WindowsFeature IIS
         {
-            Ensure = “Present”
-            Name = “Web-Server”
+            Ensure = 'Present'
+            Name = 'Web-Server'
         }
 
         #Install ASP.NET 4.5
         WindowsFeature AspNet45
         {
-            Ensure = “Present”
-            Name = “Web-Asp-Net45”
+            Ensure = 'Present'
+            Name = 'Web-Asp-Net45'
         }
 
         #Install Mgmt Console
         WindowsFeature WebServerManagementConsole
         {
-            Ensure = "Present"
-            Name = "Web-Mgmt-Console"
+            Ensure = 'Present'
+            Name = 'Web-Mgmt-Console'
 
         }
 
         # Stop an existing website (set up in Sample_xWebsite_Default)
         xWebsite DefaultSite 
         {
-            Ensure          = “Present”
-            Name            = “Default Web Site”
-            State           = “Stopped”
-            PhysicalPath    = “C:\inetpub\wwwroot”
-            DependsOn       = “[WindowsFeature]IIS”
+            Ensure          = 'Present'
+            Name            = 'Default Web Site'
+            State           = 'Stopped'
+            PhysicalPath    = 'C:\inetpub\wwwroot'
+            DependsOn       = '[WindowsFeature]IIS'
         }
 
             File Tempdir
@@ -58,30 +58,30 @@ Configuration WebConfig
     cAzureStorage WebDeployFile
         {
             Path = $tempdir
-            StorageAccountContainer = "website-bits"
+            StorageAccountContainer = 'website-bits'
             StorageAccountKey = $storagekey
             StorageAccountName = $storageaccountname
-            DependsOn = "[File]Tempdir"
+            DependsOn = '[File]Tempdir'
         }
 
 
         Archive ExtractWebsite
         {
-            Ensure          = “Present”
+            Ensure          = 'Present'
             Destination     = $destpath
             Path            = "$tempdir\azdays-website.zip"
-            DependsOn       = "[cAzureStorage]WebDeployFile"
+            DependsOn       = '[cAzureStorage]WebDeployFile'
 
         }
                         
         # Create a new website
         xWebsite AzdaysWebsite 
         {
-            Ensure          = “Present”
-            Name            = "AzdaysWebsite"
-            State           = “Started”
+            Ensure          = 'Present'
+            Name            = 'AzdaysWebsite'
+            State           = 'Started'
             PhysicalPath    = "$destpath\website"
-            DependsOn       = “[xWebsite]Defaultsite”, "[Archive]ExtractWebsite"
+            DependsOn       = '[xWebsite]Defaultsite', '[Archive]ExtractWebsite'
         }  
 
       }

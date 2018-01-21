@@ -89,7 +89,13 @@ New-AzureRmResourceGroup -Name $vnetResourceGroup -Location $location
 #Deploy VNET from template
 $vnetTemplatePath = "$artifactsLocation/simplevnet.json"
 $vnetparameterPath = "C:\Users\mamorga\Source\Repos\AzureDaysDraft\AzureDays\simplevnet.parameters.json"
-New-AzureRmResourceGroupDeployment -Name azdVnetDeploy -ResourceGroupName $vnetresourceGroup -TemplateFile $vnetTemplatePath -TemplateParameterFile $vnetparameterPath -Mode Incremental -Verbose
+New-AzureRmResourceGroupDeployment `
+    -Name azdVnetDeploy `
+    -ResourceGroupName $vnetresourceGroup `
+    -TemplateFile $vnetTemplatePath `
+    -TemplateParameterFile $vnetparameterPath `
+    -Mode Incremental `
+    -Verbose
 
 
 ##############################
@@ -121,7 +127,7 @@ $lb = New-AzureRmLoadBalancer `
 
 #create port 80 probe
 Add-AzureRmLoadBalancerProbeConfig `
-  -Name myHealthProbe `
+  -Name HttpProbe `
   -LoadBalancer $lb `
   -Protocol tcp `
   -Port 80 `
@@ -132,7 +138,7 @@ $probe = Get-AzureRmLoadBalancerProbeConfig -LoadBalancer $lb -Name myHealthProb
 
 #add LB rule for port 80
 Add-AzureRmLoadBalancerRuleConfig `
-  -Name myLoadBalancerRuleHttp `
+  -Name HttpRule `
   -LoadBalancer $lb `
   -FrontendIpConfiguration $lb.FrontendIpConfigurations[0] `
   -BackendAddressPool $lb.BackendAddressPools[0] `
@@ -150,9 +156,9 @@ Set-AzureRmLoadBalancer -LoadBalancer $lb
 
 ##########################
 #create VMs              #
-#run azdays-VmDeploy.ps1 #
 ##########################
 $vmResourceGroup = "azd-vm-rg-01"
+#run azdays-VmDeploy.ps1
 
 #############################################################
 #create Azure Container Registry while VMs build            #
@@ -168,6 +174,7 @@ $dockerCredential = New-Object System.Management.Automation.PSCredential ($docke
 
 #########################################################################
 #add VMs to Load Balancer with RDP NAT rules mapped across multiple VMs.# 
+#########################################################################
 $vms = Get-AzureRmVM -ResourceGroupName $vmResourceGroup
 $lb = Get-AzureRmLoadBalancer -Name azd-lb-01 -ResourceGroupName $vnetresourceGroup
 $vmCount = 0
