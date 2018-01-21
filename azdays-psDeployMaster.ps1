@@ -134,7 +134,7 @@ Add-AzureRmLoadBalancerProbeConfig `
   -IntervalInSeconds 15 `
   -ProbeCount 2
 Set-AzureRmLoadBalancer -LoadBalancer $lb
-$probe = Get-AzureRmLoadBalancerProbeConfig -LoadBalancer $lb -Name myHealthProbe
+$probe = Get-AzureRmLoadBalancerProbeConfig -LoadBalancer $lb -Name HttpProbe
 
 #add LB rule for port 80
 Add-AzureRmLoadBalancerRuleConfig `
@@ -146,12 +146,24 @@ Add-AzureRmLoadBalancerRuleConfig `
   -FrontendPort 80 `
   -BackendPort 80 `
   -Probe $probe
+
 Set-AzureRmLoadBalancer -LoadBalancer $lb
 
 #configure RDP NAT Rules
-$lb = Get-AzureRmLoadBalancer -Name azd-lb-01 -ResourceGroupName $vnetresourceGroup
-$lb | Add-AzureRmLoadBalancerInboundNatRuleConfig -Name RDP1 -FrontendIpConfiguration $lb.FrontendIpConfigurations[0] -Protocol TCP -FrontendPort 3441 -BackendPort 3389
-$lb | Add-AzureRmLoadBalancerInboundNatRuleConfig -Name RDP2 -FrontendIpConfiguration $lb.FrontendIpConfigurations[0] -Protocol TCP -FrontendPort 3442 -BackendPort 3389
+$lb | Add-AzureRmLoadBalancerInboundNatRuleConfig `
+    -Name RDP1 `
+    -FrontendIpConfiguration $lb.FrontendIpConfigurations[0] `
+    -Protocol TCP `
+    -FrontendPort 3441 `
+    -BackendPort 3389
+
+$lb | Add-AzureRmLoadBalancerInboundNatRuleConfig `
+-Name RDP2 `
+-FrontendIpConfiguration $lb.FrontendIpConfigurations[0] `
+-Protocol TCP `
+-FrontendPort 3442 `
+-BackendPort 3389
+
 Set-AzureRmLoadBalancer -LoadBalancer $lb 
 
 ##########################
@@ -166,11 +178,16 @@ $vmResourceGroup = "azd-vm-rg-01"
 #############################################################
 $registry = New-AzureRmContainerRegistry -Name "azdayscontreg" -ResourceGroupName $OpsResourceGroup -Sku Basic -EnableAdminUser
 $dockerCredential = Get-AzureRmContainerRegistryCredential -ResourceGroupName $OpsResourceGroup -Name $registry.Name 
+$dockerCredential
+
 $dockerSecurePass = ($dockerCredential.Password | ConvertTo-SecureString -AsPlainText -Force)
 $dockerCredential = New-Object System.Management.Automation.PSCredential ($dockerCredential.Username, $dockerSecurePass)
 
 #copy LoginServer for use in docker image tag.
 #copy username & password for docker login
+
+#check DSC Compliance
+Get-AzureRmAutomationDscNode -AutomationAccountName $autoAccountName -ResourceGroupName $OpsResourceGroup
 
 #########################################################################
 #add VMs to Load Balancer with RDP NAT rules mapped across multiple VMs.# 

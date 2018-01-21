@@ -126,3 +126,16 @@ try {
         -Force `
         -Verbose
 } catch { throw $_ }
+
+##attach the NSG to the VM subnet
+$subnetConfig = Set-AzureRmVirtualNetworkSubnetConfig `
+    -Name $vmSubnetName `
+    -AddressPrefix $subnets[1].AddressPrefix `
+    -VirtualNetwork $vnet `
+    -NetworkSecurityGroup $nsg 
+
+Log-Output "attaching NSG to subnet $vmSubnetName"
+
+$vnet = Set-AzureRmVirtualNetwork -VirtualNetwork $vnet
+
+Log-Output "******deployment complete******"
