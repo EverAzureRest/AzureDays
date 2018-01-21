@@ -39,14 +39,14 @@ function Log-Output($msg) {
 
 #initial steps --if you have access to multiple subscriptions uncomment below & add correct sub name
 #login-azureRmAccount
-#$subscription = Get-AzureRmSubscription
-#$subscriptionName = $subscription[0].Name
-#$armContext = Set-AzureRmContext -Subscription $subscriptionName
+$subscription = Get-AzureRmSubscription
+$subscriptionName = $subscription[0].Name
+$armContext = Set-AzureRmContext -Subscription $subscriptionName
 $location = "East US"
 $keyvault = Get-AzureRmKeyVault -ResourceGroupName $OpsResourceGroup
 
 Log-Output ("connected to subscription " + $armContext.Subscription +" as " + $armContext.Account.Id)
-Log-Output "secrets being retrieved from keyvault = $keyvault"
+Log-Output "secrets being retrieved from keyvault = " + $keyvault.VaultName
 
 #get Automation info for DSC & retrieve variables and keys
 $adminSecret = Get-AzureKeyVaultSecret -VaultName $keyvault.VaultName -Name 'vmAdminPassword'

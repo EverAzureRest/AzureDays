@@ -3,28 +3,28 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "omsRecoveryVaultName": {
-      "value": ""
+      "value": "mmazdrcvryvlt01"
     },
     "omsRecoveryVaultRegion": {
       "value": "East US"
     },
     "omsWorkspaceName": {
-      "value": ""
+      "value": "mmazdomsws"
     },
     "omsWorkspaceRegion": {
       "value": "East US"
     },
     "omsAutomationAccountName": {
-      "value": ""
+      "value": "azd-aa-01"
     },
     "omsAutomationRegion": {
       "value": "East US 2"
     },
     "azureAdminPwd": {
-      "value": "password-change-me"
+      "value": "p4rk3rAzureAdm1n"
     },
     "azureAdmin": {
-      "value": ""
+      "value": "mamorga@microsoft.com"
     },
     "_artifactsLocation": {
       "value": "https://raw.githubusercontent.com/lorax79/AzureDays/master/OMS"

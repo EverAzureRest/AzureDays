@@ -1,29 +1,41 @@
-﻿###Azure Days Powershell deployment scripts###
+﻿##############################################
+###Azure Days Powershell deployment scripts###
 ##############################################
 
 #login to Azure
 login-azureRmAccount
-#setup variables
-#all could be paramaters instead
+
+#setup OMS variables
+####################
 $artifactsLocation = "https://raw.githubusercontent.com/Lorax79/AzureDays/master"
 $location = "East US"
-$vnetresourceGroup = "azd-vnet-rg-01"
-$vmResourceGroup = "azd-vm-rg-01"
 $OpsResourceGroup = "azd-ops-rg-01"
-
-###Deploy KeyVault and add secrets###
-$keyvaultName = "azd-kv-01"
-$vault = New-AzureRmKeyVault -VaultName $keyvaultName -ResourceGroupName $OpsResourceGroup -Location $location -EnabledForTemplateDeployment
-#Copy resource ID of KeyVault for VM template parameters
 
 
 #######################################################
 ###deploy OMS and Automation accounts from templates###
 #######################################################
 New-AzureRmResourceGroup -Name $opsResourceGroup -Location $location
-$omsTemplatePath = "$artifactsLocation/omsMaster-deploy.json"
+$omsTemplatePath = "$artifactsLocation/OMS/omsMaster-deploy.json"
 $omsParameterPath = "C:\Users\mamorga\Source\Repos\AzureDays\OMS\omsMaster.parameters.json"
-New-AzureRmResourceGroupDeployment -Name azdOmsDeploy -ResourceGroupName $vnetresourceGroup -TemplateFile $vnetTemplatePath -TemplateParameterFile $vnetparameterPath -Mode Incremental -Verbose
+New-AzureRmResourceGroupDeployment `
+    -Name azdOmsDeploy `
+    -ResourceGroupName $opsResourceGroup `
+    -TemplateFile $omsTemplatePath `
+    -TemplateParameterFile $omsParameterPath `
+    -Mode Incremental `
+    -Verbose
+
+#####################################
+###Deploy KeyVault and add secrets###
+#####################################
+$keyvaultName = "azd-kv-01"
+$vault = New-AzureRmKeyVault `
+    -VaultName $keyvaultName `
+    -ResourceGroupName $OpsResourceGroup `
+    -Location $location `
+    -EnabledForTemplateDeployment
+#Copy resource ID of KeyVault for VM template parameters
 #get OMS workspace name & keys, store key in vault. 
 $omsWorkspace = Get-AzureRmOperationalInsightsWorkspace -ResourceGroupName $OpsResourceGroup
 $omsKeys = Get-AzureRmOperationalInsightsWorkspaceSharedKeys -ResourceGroupName $OpsResourceGroup -Name $omsWorkspace.Name
@@ -31,7 +43,11 @@ $omsPrimaryKey = $omsKeys.PrimarySharedKey
 $omsSecret = ConvertTo-SecureString $omsPrimaryKey -AsPlainText -force
 $omsVault = Set-AzureKeyVaultSecret -VaultName $keyvaultName -Name 'omsKey' -SecretValue $omsSecret
 
-###Get admin credential from Automation account, prompt for password as secure string. 
+########################################################################################
+###Get admin credential from Automation account, prompt for password as secure string. #
+########################################################################################
+$Account = Get-AzureRmAutomationAccount -ResourceGroupName $OpsResourceGroup
+$autoAccountName = $account.AutomationAccountName
 $adminCredential = Get-AzureRmAutomationCredential -ResourceGroupName $OpsResourceGroup -AutomationAccountName $autoAccountName -Name AzureCredentials
 $adminUsername = $adminCredential.UserName
 $adminCredential = Get-Credential -UserName $adminUsername -Message "Please enter the password for the Azure Admin user for the VM"
@@ -39,28 +55,27 @@ $adminPassword = $adminCredential.Password
 #store Admin credentials in Keyvault
 $secret = Set-AzureKeyVaultSecret -VaultName $keyvaultName -Name 'vmAdminPassword' -SecretValue $adminPassword
 
-##########################################
-#copy website content from GIT to storage#
-##########################################
-$storageAccount = Get-AzureRmStorageAccount -ResourceGroupName $opsResourceGroup 
-$storageAccountKeys = Get-AzureRmStorageAccountKey -ResourceGroupName $OpsResourceGroup -Name $storageAccount.StorageAccountName
-$storagePrimaryKey = $storageAccountKeys[0].value
-$Context = New-AzureStorageContext -StorageAccountName $storageAccount.StorageAccountName -StorageAccountKey $storagePrimaryKey
-$container = New-AzureStorageContainer -Name "website-bits" -Context $Context
-Start-AzureStorageBlobCopy -AbsoluteUri "$artifactsLocation/website.zip" -DestContainer $container.Name -DestBlob "azdays-website.zip" -DestContext $Context
-
-####################################################################    
-#get Automation info for DSC, set variables for VM deployment later#
-####################################################################
-$Account = Get-AzureRmAutomationAccount -ResourceGroupName $OpsResourceGroup
-$autoAccountName = $account.AutomationAccountName
+###########################################################################    
+#get Automation registration info for DSC, set variables for VM deployment#
+###########################################################################
 $RegistrationInfo = $Account | Get-AzureRmAutomationRegistrationInfo
 $registrationUrl = $RegistrationInfo.Endpoint
 $registrationKey = $RegistrationInfo.PrimaryKey
+$storageAccount = Get-AzureRmStorageAccount -ResourceGroupName $opsResourceGroup 
+$storageAccountKeys = Get-AzureRmStorageAccountKey -ResourceGroupName $OpsResourceGroup -Name $storageAccount.StorageAccountName
+$storagePrimaryKey = $storageAccountKeys[0].value
 $vnetRgVar = New-AzureRmAutomationVariable -Encrypted $false -Name "VnetResourceGroup" -ResourceGroupName $OpsResourceGroup -AutomationAccountName $autoAccountName -Value $vnetresourceGroup
 $artifactsVar = New-AzureRmAutomationVariable -Encrypted $false -Name "artifactsLocation" -ResourceGroupName $OpsResourceGroup -AutomationAccountName $autoAccountName -Value $artifactsLocation
 $storageAccountNameVar = New-AzureRmAutomationVariable -Encrypted $false -Name "saname" -ResourceGroupName $OpsResourceGroup -AutomationAccountName $autoAccountName -Value $storageAccount.StorageAccountName
 $storageAccountKeyVar = New-AzureRmAutomationVariable -Encrypted $true -Name "sakey" -ResourceGroupName $OpsResourceGroup -AutomationAccountName $autoAccountName -Value $storagePrimaryKey
+
+
+##########################################
+#copy website content from GIT to storage#
+##########################################
+$Context = New-AzureStorageContext -StorageAccountName $storageAccount.StorageAccountName -StorageAccountKey $storagePrimaryKey
+$container = New-AzureStorageContainer -Name "website-bits" -Context $Context
+Start-AzureStorageBlobCopy -AbsoluteUri "$artifactsLocation/website.zip" -DestContainer $container.Name -DestBlob "azdays-website.zip" -DestContext $Context
 
 
 #####################
@@ -68,6 +83,7 @@ $storageAccountKeyVar = New-AzureRmAutomationVariable -Encrypted $true -Name "sa
 #####################
 
 #create VNet Resource Group
+$vnetresourceGroup = "azd-vnet-rg-01"
 New-AzureRmResourceGroup -Name $vnetResourceGroup -Location $location
 
 #Deploy VNET from template
@@ -136,8 +152,22 @@ Set-AzureRmLoadBalancer -LoadBalancer $lb
 #create VMs              #
 #run azdays-VmDeploy.ps1 #
 ##########################
+$vmResourceGroup = "azd-vm-rg-01"
 
-#add VMs to Load Balancer with RDP NAT rules mapped across multiple VMs. 
+#############################################################
+#create Azure Container Registry while VMs build            #
+#we will be pushing a docker image from VMs after deployment#
+#############################################################
+$registry = New-AzureRmContainerRegistry -Name "azdayscontreg" -ResourceGroupName $OpsResourceGroup -Sku Basic -EnableAdminUser
+$dockerCredential = Get-AzureRmContainerRegistryCredential -ResourceGroupName $OpsResourceGroup -Name $registry.Name 
+$dockerSecurePass = ($dockerCredential.Password | ConvertTo-SecureString -AsPlainText -Force)
+$dockerCredential = New-Object System.Management.Automation.PSCredential ($dockerCredential.Username, $dockerSecurePass)
+
+#copy LoginServer for use in docker image tag.
+#copy username & password for docker login
+
+#########################################################################
+#add VMs to Load Balancer with RDP NAT rules mapped across multiple VMs.# 
 $vms = Get-AzureRmVM -ResourceGroupName $vmResourceGroup
 $lb = Get-AzureRmLoadBalancer -Name azd-lb-01 -ResourceGroupName $vnetresourceGroup
 $vmCount = 0
@@ -152,5 +182,16 @@ foreach ($vm in $vms)
         $vmCount++
     }
 
-    
+#####################################
+#deploy docker image to ACI instance#
+####################################
+
+$aci = New-AzureRmContainerGroup `
+    -ResourceGroupName $vmResourceGroup `
+    -Name azd-site `
+    -Image azdayscontreg.azurecr.io/iis-site:v1 `
+    -OsType Windows `
+    -IpAddressType Public `
+    -Port 8000 `
+    -RegistryCredential $dockerCredential
 
