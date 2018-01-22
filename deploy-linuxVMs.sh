@@ -26,6 +26,7 @@ VMTEMPLATEFILE=./Linux-Ubuntu-VM-Template.json
 VMPARAMSFILE=./Linux-Ubuntu-VM-Template.parameters.json
 #Cloud-init yml configuration - don't change this
 CLOUDINIT="./cloudconfig-ubuntu.txt"
+FEPORT="3441"
 
 az account set --subscription $SUBSCRIPTIONNAME
 echo "Account set to $SUBSCRIPTIONNAME"
@@ -60,7 +61,7 @@ az network public-ip create -g $VNETRG -n $PUBLICIPNAME -l $LOCATION --dns-name 
 echo "Deploying the Network Load Balancer..."
 
 az network lb create -g $VNETRG -n $LBNAME -l $LOCATION --frontend-ip-name lbfrontipconfig --backend-pool-name lbbackendpool --public-ip-address $PUBLICIPNAME 
-az network lb inbound-nat-rule create --frontend-ip-name lbfrontipconfig --backend-port 22 --frontend-port 5022 --lb-name $LBNAME -n inbound-nat -g $VNETRG --protocol Tcp
+az network lb inbound-nat-rule create --frontend-ip-name lbfrontipconfig --backend-port 22 --frontend-port $FEPORT --lb-name $LBNAME -n inbound-nat -g $VNETRG --protocol Tcp
 az network lb rule create --lb-name $LBNAME -g $VNETRG -n lbrule --frontend-port 80 --backend-port 80 --protocol Tcp --frontend-ip-name lbfrontipconfig --backend-pool-name lbbackendpool
 az network lb probe create --lb-name $LBNAME -n probe --port 22 --protocol Tcp -g $VNETRG --interval 10 --threshold 5
 
@@ -81,5 +82,5 @@ az network nic ip-config update -g $VMRG --nic-name $NIC2NAME --lb-address-pools
 FQDN=$(az network public-ip show -n $PUBLICIPNAME -g $VNETRG --query "dnsSettings.fqdn" | tr -d '"')
 IP=$(az network public-ip show -n $PUBLICIPNAME -g $VNETRG --query "ipAddress" | tr -d '"')
 
-echo "All resources are complete.\nPlease login to $IP over port 5022: ssh adminuser@$IP -p 5022.\nAccess the load balanced website at http://$FQDN/index.html"
+echo "All resources are complete.\nPlease login to $IP over port 5022: ssh adminuser@$IP -p $FEPORT.\nAccess the load balanced website at http://$FQDN/index.html"
 
