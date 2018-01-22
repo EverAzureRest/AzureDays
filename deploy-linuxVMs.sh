@@ -81,5 +81,5 @@ az network nic ip-config update -g $VMRG --nic-name $NIC2NAME --lb-address-pools
 FQDN=$(az network public-ip show -n $PUBLICIPNAME -g $VNETRG --query "dnsSettings.fqdn" | tr -d '"')
 IP=$(az network public-ip show -n $PUBLICIPNAME -g $VNETRG --query "ipAddress" | tr -d '"')
 
-echo "All resources are complete.  Please login to $IP over port 5022: ssh adminuser@$IP -p 5022. Access the load balanced website at http://$FQDN/index.html"
+echo "All resources are complete.\nPlease login to $IP over port 5022: ssh adminuser@$IP -p 5022.\nAccess the load balanced website at http://$FQDN/index.html"
 
