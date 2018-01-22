@@ -9,8 +9,8 @@ SUPPORTRG="azd-support-rg"
 SUBSCRIPTIONNAME=""
 #Deployment Azure Region
 LOCATION="EastUS"
-#KeyVault Name
-KVNAME="azd-kevault"
+#KeyVault Name - must be globally unique, so be creative!
+KVNAME=""
 #OMS Key from the OMS Deployment Script
 OMSKEY=""
 #RSA Public Key Path - change if not the default path to your key
