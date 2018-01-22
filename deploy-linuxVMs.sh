@@ -14,7 +14,7 @@ SUBSCRIPTIONNAME=""
 #Deployment Azure Region
 LOCATION="EastUS"
 #LoadBalancer Name
-LBNAME="azd-lb"
+LBNAME=""
 #Name of the Public IP address for the NLB - needs to be unique, so use a creative convention
 PUBLICIPNAME=""
 #DNS simple name for the load balancer. Will be appended to FQDN.  Must be unique per region, so use a creative convention. 
@@ -78,8 +78,8 @@ echo "Attaching VMs to Load Balancer Backend Pool"
 az network nic ip-config update -g $VMRG --nic-name $NIC1NAME --lb-address-pools $LBBACKENDPOOLID --lb-inbound-nat-rules $LBNATID --lb-name $LBNAME --name $IPCONFIG1
 az network nic ip-config update -g $VMRG --nic-name $NIC2NAME --lb-address-pools $LBBACKENDPOOLID --lb-name $LBNAME --name $IPCONFIG2
 
-FQDN=$(az network public-ip show -n $PUBLICIPNAME -g $VNETRG --query "dnsSettings.fqdn")
-IP=$(az network public-ip show -n $PUBLICIPNAME -g $VNETRG --query "ipAddress")
+FQDN=$(az network public-ip show -n $PUBLICIPNAME -g $VNETRG --query "dnsSettings.fqdn" | tr -d '"')
+IP=$(az network public-ip show -n $PUBLICIPNAME -g $VNETRG --query "ipAddress" | tr -d '"')
 
 echo "All resources are complete.  Please login to $IP over port 5022: ssh adminuser@$IP -p 5022. Access the load balanced website at http://$FQDN/index.html"
 
