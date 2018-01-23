@@ -6,7 +6,7 @@
 #Specify VM Resource Group Name
 VMRG="azd-vm-rg"
 #Resource Group Name for the VNET
-VNETRG="azd-vnet-rg"
+VNETRG="azd-vnet-rg2"
 #VNET Name - make sure this is the same value as in ./simplevnet.parameters.json
 VNET="AzureDaysVNET"
 #Name of the deployment subscription
@@ -82,5 +82,7 @@ az network nic ip-config update -g $VMRG --nic-name $NIC2NAME --lb-address-pools
 FQDN=$(az network public-ip show -n $PUBLICIPNAME -g $VNETRG --query "dnsSettings.fqdn" | tr -d '"')
 IP=$(az network public-ip show -n $PUBLICIPNAME -g $VNETRG --query "ipAddress" | tr -d '"')
 
-echo "All resources are complete.\nPlease login to $IP over port 5022: ssh adminuser@$IP -p $FEPORT.\nAccess the load balanced website at http://$FQDN/index.html"
+echo "All resources are complete.
+Please login to $IP over port $FEPORT: ssh adminuser@$IP -p $FEPORT.
+Access the load balanced website at http://$FQDN/index.html"
 
