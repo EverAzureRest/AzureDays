@@ -254,7 +254,7 @@
             "properties": {
               "publisher": "Microsoft.EnterpriseCloud.Monitoring",
               "type": "OmsAgentForLinux",
-              "typeHandlerVersion": "1.0",
+              "typeHandlerVersion": "1.4",
               "autoUpgradeMinorVersion": true,
               "settings": {
                 "workspaceId": "[parameters('workspaceId')]"
