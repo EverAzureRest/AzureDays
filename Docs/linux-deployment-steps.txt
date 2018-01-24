@@ -39,7 +39,13 @@ Process Notes...
 7. Go to https://portal.azure.com and log in. 
     browse to Log Analytics Workspace resource
     get your workspace key under advanced settings-->Connected Sources
-    note workspace key value in notepad. 
+    note workspace key value in notepad.
+    Add counters under advanced settings-->Data-->Linux Performance Counters
+    * Memory(*)\Available MBytes Memory
+    * Process(*)\Used Memory
+    * Processor(*)\% Processor Time
+    * System(*)\Processes
+    Click Save
 
 8. open deploy-keyvault.sh in code editor
     edit empty variables
