@@ -6,7 +6,7 @@
 #Specify VM Resource Group Name
 VMRG="azd-vm-rg"
 #Resource Group Name for the VNET
-VNETRG="azd-vnet-rg2"
+VNETRG=""
 #VNET Name - make sure this is the same value as in ./simplevnet.parameters.json
 VNET="AzureDaysVNET"
 #Name of the deployment subscription
