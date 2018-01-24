@@ -45,7 +45,7 @@ echo "Building the VM ResourceGroup $VMRG..."
 az group create --name $VMRG --location $LOCATION
 
 echo "Deploying VMs..."
-INITCONTENT=`cat "$CLOUDINIT"|base64 -w 0`
+INITCONTENT=`cat "$CLOUDINIT"|base64`
 echo "\"customData\":{\"value\":\"$INITCONTENT\"}" > updatepattern.txt
 
 cat $VMPARAMSFILE | tr '\n' ' ' | sed "s/\"customData[^{]*{[^}]*}/$(sed 's:/:\\/:g' updatepattern.txt)/" > params.json
