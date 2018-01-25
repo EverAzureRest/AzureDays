@@ -15,6 +15,9 @@ STORAGEKEY=$(az storage account keys list -n $STORAGEACCOUNTNAME -g $SUPPORTRG -
 #Create the container for the website data
 az storage container create -n website --account-name $STORAGEACCOUNTNAME --public-access container
 
+#ensure container permissions are set to public
+az storage container set-permission -n website --account-name $STORAGEACCOUNTNAME --public-access container
+
 #Deploy the content to the storage endpoint
 blobxfer upload --local-path $CONTENTPATH --storage-account $STORAGEACCOUNTNAME --remote-path /website --storage-account-key $STORAGEKEY
 
