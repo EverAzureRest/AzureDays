@@ -16,7 +16,7 @@ $OpsResourceGroup = "azd-ops-rg-01"
 ###deploy OMS and Automation accounts from templates###
 #######################################################
 New-AzureRmResourceGroup -Name $opsResourceGroup -Location $location
-$omsTemplatePath = "$artifactsLocation/OMS/omsMaster-deploy.json"
+$omsTemplatePath = "$artifactsLocation\OMS\omsMaster-deploy.json"
 $omsParameterPath = "C:\Users\mamorga\Source\Repos\AzureDays\OMS\omsMaster.parameters.json"
 New-AzureRmResourceGroupDeployment `
     -Name azdOmsDeploy `
@@ -57,6 +57,7 @@ $secret = Set-AzureKeyVaultSecret -VaultName $keyvaultName -Name 'vmAdminPasswor
 
 ###########################################################################    
 #get Automation registration info for DSC, set variables for VM deployment#
+#we will be placing deployment variables in Automation account            #
 ###########################################################################
 $RegistrationInfo = $Account | Get-AzureRmAutomationRegistrationInfo
 $registrationUrl = $RegistrationInfo.Endpoint
@@ -64,6 +65,9 @@ $registrationKey = $RegistrationInfo.PrimaryKey
 $storageAccount = Get-AzureRmStorageAccount -ResourceGroupName $opsResourceGroup 
 $storageAccountKeys = Get-AzureRmStorageAccountKey -ResourceGroupName $OpsResourceGroup -Name $storageAccount.StorageAccountName
 $storagePrimaryKey = $storageAccountKeys[0].value
+#this next value can be changed to a different VNet name (optional)
+$vnetresourceGroup = "azd-vnet-rg-01"
+$opsRgVar = New-AzureRmAutomationVariable -Encrypted $false -Name "OpsResourceGroup" -ResourceGroupName $OpsResourceGroup -AutomationAccountName $autoAccountName -Value $vnetresourceGroup
 $vnetRgVar = New-AzureRmAutomationVariable -Encrypted $false -Name "VnetResourceGroup" -ResourceGroupName $OpsResourceGroup -AutomationAccountName $autoAccountName -Value $vnetresourceGroup
 $artifactsVar = New-AzureRmAutomationVariable -Encrypted $false -Name "artifactsLocation" -ResourceGroupName $OpsResourceGroup -AutomationAccountName $autoAccountName -Value $artifactsLocation
 $storageAccountNameVar = New-AzureRmAutomationVariable -Encrypted $false -Name "saname" -ResourceGroupName $OpsResourceGroup -AutomationAccountName $autoAccountName -Value $storageAccount.StorageAccountName
@@ -83,7 +87,6 @@ Start-AzureStorageBlobCopy -AbsoluteUri "$artifactsLocation/website.zip" -DestCo
 #####################
 
 #create VNet Resource Group
-$vnetresourceGroup = "azd-vnet-rg-01"
 New-AzureRmResourceGroup -Name $vnetResourceGroup -Location $location
 
 #Deploy VNET from template
