@@ -12,10 +12,7 @@
       "type": "string",
       "defaultValue": "East US 2",
       "allowedValues": [
-        "West US",
-        "East US",
-        "East US 2",
-        "West Central US"
+        "West Europe",
       ],
       "metadata": {
         "description": "Specify the region for your Recovery Vault"
@@ -31,8 +28,7 @@
       "type": "string",
       "defaultValue": "East US",
       "allowedValues": [
-        "East US",
-        "West Central US"
+        "West Europe"
       ],
       "metadata": {
         "description": "Specify the region for your Workspace"
@@ -46,19 +42,10 @@
     },
     "omsAutomationRegion": {
       "type": "string",
-      "defaultValue": "East US 2",
+      "defaultValue": "West Europe",
       "allowedValues": [
-        "Japan East",
-        "East US 2",
         "West Europe",
-        "Southeast Asia",
-        "South Central US",
-        "West Central US",
-        "North Europe",
-        "Canada Central",
-        "Australia Southeast",
-        "Central India",
-        "Japan East"
+        "North Europe"
       ],
       "metadata": {
         "description": "Specify the region for your Automation account"
