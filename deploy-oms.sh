@@ -20,8 +20,9 @@ az account set --subscription $SUBSCRIPTIONNAME
 echo "Account set to $SUBSCRIPTIONNAME"
 
 #Create the Resource Group for the Keyvault and OMS
-echo "Building Resource Group for OMS and Keyvault..."
-az group create --name $SUPPORTRG --location $LOCATION
+#Not needed if RG is precreated
+#echo "Building Resource Group for OMS and Keyvault..."
+#az group create --name $SUPPORTRG --location $LOCATION
 
 #Deploy the workspace
 echo "Deploying OMS workspace"

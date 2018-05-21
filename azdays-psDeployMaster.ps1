@@ -6,18 +6,20 @@
 login-azureRmAccount
 set-azureRmContext -Subscription 'az-training-01'
 
-#setup OMS variables
-####################
+##################################################
+#setup OMS variables                             #
+#change resource group names to ones you created.#
+##################################################
 $artifactsLocation = "https://raw.githubusercontent.com/mmcsa/AzureDays/master"
 $location = "West Europe"
-$OpsResourceGroup = "azd-ops-rg-01"
-$vnetresourceGroup = "azd-vnet-rg-01"
+$OpsResourceGroup = "azd-matmorgan-ops-rg-01"
+$vnetresourceGroup = "azd-matmorgan-vnet-rg-01"
+$vmResourceGroup = "azd-matmorgan-vm-rg-01"
 
 
 #######################################################
 ###deploy OMS and Automation accounts from templates###
 #######################################################
-New-AzureRmResourceGroup -Name $opsResourceGroup -Location $location
 $omsTemplatePath = "$artifactsLocation/OMS/omsMaster-deploy.json"
 $omsParameterPath = "C:\Users\mamorga\Source\Repos\AzureDays\OMS\omsMaster.parameters.json"
 New-AzureRmResourceGroupDeployment `
@@ -110,7 +112,7 @@ $publicIP = New-AzureRmPublicIpAddress `
   -ResourceGroupName $VNetresourceGroup `
   -Location $location `
   -AllocationMethod Static `
-  -Name myPublicIP
+  -Name azd-mm-pip-01
 
 #front-end IP for LB
 $frontendIP = New-AzureRmLoadBalancerFrontendIpConfig `
@@ -172,7 +174,7 @@ Set-AzureRmLoadBalancer -LoadBalancer $lb
 ##########################
 #create VMs              #
 ##########################
-$vmResourceGroup = "azd-vm-rg-01"
+
 #run azdays-VmDeploy.ps1
 
 #############################################################

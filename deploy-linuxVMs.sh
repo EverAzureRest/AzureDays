@@ -31,9 +31,10 @@ FEPORT="3441"
 az account set --subscription $SUBSCRIPTIONNAME
 echo "Account set to $SUBSCRIPTIONNAME"
 
-echo "Bulding VNET ResourceGroup $VNETRG..."
+#not needed for EHQ AzureDays
+#echo "Bulding VNET ResourceGroup $VNETRG..."
 
-az group create --name $VNETRG --location $LOCATION
+#az group create --name $VNETRG --location $LOCATION
 
 echo "Deploying the VNET..."
 

@@ -20,7 +20,7 @@ Param
 
     # VM Size
     [Parameter(Mandatory=$True, HelpMessage="Enter the Vm Size.")]
-    [ValidateSet("Standard_D1_v2", "Standard_D2_v2")]
+    [ValidateSet("Standard_D2_v3")]
     [String]$VmSize,
 
     # number of VMs to deploy
@@ -39,10 +39,8 @@ function Log-Output($msg) {
 
 #initial steps --if you have access to multiple subscriptions uncomment below & add correct sub name
 #login-azureRmAccount
-$subscription = Get-AzureRmSubscription
-$subscriptionName = $subscription[0].Name
-$armContext = Set-AzureRmContext -Subscription $subscriptionName
-$location = "East US"
+$armContext = Set-AzureRmContext -Subscription 'az-training-01'
+$location = "West Europe"
 $keyvault = Get-AzureRmKeyVault -ResourceGroupName $OpsResourceGroup
 
 Log-Output ("connected to subscription " + $armContext.Subscription +" as " + $armContext.Account.Id)
