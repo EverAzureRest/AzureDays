@@ -3,31 +3,28 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "omsRecoveryVaultName": {
-      "value": ""
+      "value": "azd-matmorgan-rv-01"
     },
     "omsRecoveryVaultRegion": {
-      "value": "East US"
+      "value": "West Europe"
     },
     "omsWorkspaceName": {
-      "value": ""
+      "value": "azd-matmorgan-la-01"
     },
     "omsWorkspaceRegion": {
-      "value": "East US"
+      "value": "West Europe"
     },
     "omsAutomationAccountName": {
-      "value": ""
+      "value": "azd-matmorgan-aa-01"
     },
     "omsAutomationRegion": {
-      "value": "East US 2"
-    },
-    "azureAdminPwd": {
-      "value": "CHANGE-ME"
+      "value": "West Europe"
     },
     "azureAdmin": {
-      "value": "emailaddress"
+      "value": "mat.morgan@nike.com"
     },
     "_artifactsLocation": {
-      "value": "https://raw.githubusercontent.com/lorax79/AzureDays/master/OMS"
+      "value": "https://raw.githubusercontent.com/mmcsa/AzureDays/master/OMS"
     }
   }
 }

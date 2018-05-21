@@ -12,9 +12,9 @@ set-azureRmContext -Subscription 'az-training-01'
 ##################################################
 $artifactsLocation = "https://raw.githubusercontent.com/mmcsa/AzureDays/master"
 $location = "West Europe"
-$OpsResourceGroup = "azd-matmorgan-ops-rg-01"
-$vnetresourceGroup = "azd-matmorgan-vnet-rg-01"
-$vmResourceGroup = "azd-matmorgan-vm-rg-01"
+$OpsResourceGroup = "azd-CHANGEME-ops-rg-01"
+$vnetresourceGroup = "azd-CHANGEME-vnet-rg-01"
+$vmResourceGroup = "azd-CHANGEME-vm-rg-01"
 
 
 #######################################################
@@ -33,7 +33,7 @@ New-AzureRmResourceGroupDeployment `
 #####################################
 ###Deploy KeyVault and add secrets###
 #####################################
-$keyvaultName = "azd-kv-01"
+$keyvaultName = "azd-matmorgan-kv-01"
 $vault = New-AzureRmKeyVault `
     -VaultName $keyvaultName `
     -ResourceGroupName $OpsResourceGroup `
@@ -53,7 +53,7 @@ $omsVault = Set-AzureKeyVaultSecret -VaultName $keyvaultName -Name 'omsKey' -Sec
 $Account = Get-AzureRmAutomationAccount -ResourceGroupName $OpsResourceGroup
 $autoAccountName = $account.AutomationAccountName
 $adminCredential = Get-AzureRmAutomationCredential -ResourceGroupName $OpsResourceGroup -AutomationAccountName $autoAccountName -Name AzureCredentials
-$adminUsername = $adminCredential.UserName
+$adminUsername = $adminCredential.UserName.Split('@')[0]
 $adminCredential = Get-Credential -UserName $adminUsername -Message "Please enter the password for the Azure Admin user for the VM"
 $adminPassword = $adminCredential.Password
 #store Admin credentials in Keyvault
@@ -88,9 +88,6 @@ Start-AzureStorageBlobCopy -AbsoluteUri "$artifactsLocation/website.zip" -DestCo
 ###VNet deployment###
 #####################
 
-#create VNet Resource Group
-New-AzureRmResourceGroup -Name $vnetResourceGroup -Location $location
-
 #Deploy VNET from template
 $vnetTemplatePath = "$artifactsLocation/simplevnet.json"
 $vnetparameterPath = "C:\Users\mamorga\Source\Repos\AzureDaysDraft\AzureDays\simplevnet.parameters.json"
@@ -111,8 +108,8 @@ New-AzureRmResourceGroupDeployment `
 $publicIP = New-AzureRmPublicIpAddress `
   -ResourceGroupName $VNetresourceGroup `
   -Location $location `
-  -AllocationMethod Static `
-  -Name azd-mm-pip-01
+  -AllocationMethod Dynamic `
+  -Name azd-matmorgan-pip-01
 
 #front-end IP for LB
 $frontendIP = New-AzureRmLoadBalancerFrontendIpConfig `
@@ -178,10 +175,10 @@ Set-AzureRmLoadBalancer -LoadBalancer $lb
 #run azdays-VmDeploy.ps1
 
 #############################################################
-#create Azure Container Registry while VMs build            #
+#create Azure Container Registry                            #
 #we will be pushing a docker image from VMs after deployment#
 #############################################################
-$registry = New-AzureRmContainerRegistry -Name "azdayscontreg" -ResourceGroupName $OpsResourceGroup -Sku Basic -EnableAdminUser
+$registry = New-AzureRmContainerRegistry -Name "azdmatmorganacr01" -ResourceGroupName $OpsResourceGroup -Sku Basic -EnableAdminUser
 $dockerCredential = Get-AzureRmContainerRegistryCredential -ResourceGroupName $OpsResourceGroup -Name $registry.Name 
 $dockerCredential
 

@@ -6,7 +6,7 @@
 #This script also requires the blobxfer python utility for python2 or python3, please refer to https://http://blobxfer.readthedocs.io/en/latest/01-installation/
 
 #Resource Group Name for OMS and Keyvault
-SUPPORTRG="azd-support-rg"
+SUPPORTRG="azd-CHANGEME-ops-rg-01"
 STORAGEACCOUNTNAME=$(az storage account list -g $SUPPORTRG --query "[0].name" | tr -d '"')
 BLOBENDPOINT=$(az storage account list -g $SUPPORTRG --query "[0].primaryEndpoints.blob" | tr -d '"')
 CONTENTPATH="./website"

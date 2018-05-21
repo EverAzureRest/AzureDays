@@ -143,14 +143,14 @@
     },
     "configurationModeFrequencyMins": {
       "type": "int",
-      "defaultValue": 15,
+      "defaultValue": 10,
       "metadata": {
         "description": "DSC agent (LCM) configuration mode frequency setting, in minutes"
       }
     },
     "refreshFrequencyMins": {
       "type": "int",
-      "defaultValue": 30,
+      "defaultValue": 10,
       "metadata": {
         "description": "DSC agent (LCM) refresh frequency setting, in minutes"
       }

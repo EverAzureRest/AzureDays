@@ -3,7 +3,7 @@
 "contentVersion": "1.0.0.0",
 "parameters": {
     "vnetName": {
-        "value": "AzureDaysVNET"
+        "value": "azd-CHANGEME-vnet-01"
     },
     "vnetAddressPrefix": {
         "value": "10.2.0.0/16"

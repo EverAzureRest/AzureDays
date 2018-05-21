@@ -4,15 +4,15 @@
 #Azure CLI v2.0 required for this script to work https://docs.microsoft.com/en-us/cli/azure/install-azure-cli
 
 #Specify VM Resource Group Name
-VMRG="azd-vm-rg"
+VMRG="azd-CHANGEME-vm-rg-01"
 #Resource Group Name for the VNET
-VNETRG="azd-vnet-rg"
+VNETRG="azd-CHANGEME-vnet-rg-01"
 #VNET Name - make sure this is the same value as in ./simplevnet.parameters.json
 VNET="AzureDaysVNET"
 #Name of the deployment subscription
-SUBSCRIPTIONNAME=""
+SUBSCRIPTIONNAME="az-training-01"
 #Deployment Azure Region
-LOCATION="EastUS"
+LOCATION="westeurope"
 #LoadBalancer Name
 LBNAME=""
 #Name of the Public IP address for the NLB - needs to be unique, so use a creative convention
