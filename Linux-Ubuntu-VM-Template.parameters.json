@@ -14,19 +14,19 @@
       }
     },
     "vmNamePrefix": {
-      "value": "azdaysvm0"
+      "value": "CHANGEME"
     },
     "numberOfInstances": {
       "value": 2
     },
     "availabilitySetName": {
-      "value": "azdays-as01"
+      "value": "azd-CHANGEME-as-01"
     },
     "virtualNetworkName": {
       "value": "AzureDaysVnet"
     },
     "virtualNetworkResourceGroup": {
-      "value": "azd-vnet-rg"
+      "value": "azd-CHANGEME-vnet-rg-01"
     },
     "subnetName": {
       "value": "Subnet1"
