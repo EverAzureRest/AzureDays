@@ -10,7 +10,7 @@
         "keyVault": {
           "id": "/subscriptions/ea0136ce-8872-4c39-9d70-f5bc45f8a600/resourceGroups/azd-ops-rg-01/providers/Microsoft.KeyVault/vaults/azd-kv-01"
         },
-        "secretName": "vsPassword"
+        "secretName": "vmAdminPassword"
       }
     },
     "windowsOSVersion": {
